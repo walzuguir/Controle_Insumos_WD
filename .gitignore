@@ -1,0 +1,19 @@
+# Controle de Insumos WD - Wilson Alzuguir
+# Criado em junho de 2026
+
+# Dependências
+node_modules/
+
+# Variáveis de ambiente - NUNCA subir pro GitHub
+.env
+
+# Logs
+*.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
