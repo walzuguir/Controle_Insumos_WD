@@ -17,5 +17,5 @@ Sistema de controle de entrada e saída de insumos para 8 filiais.
 3. Consulte a documentação de cada pasta
 
 ## Autor
-Wilson Alzuguir — Setor de Compras, Empresa X
+Wilson Alzuguir — Setor de Compras, Widmen Autocenter
 Projeto iniciado em junho de 2026
