@@ -7,6 +7,7 @@ const { getSheets, SPREADSHEET_ID } = require('../config/sheets');
 router.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
+    console.log('Tentativa de login:', email);
 
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
