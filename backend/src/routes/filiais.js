@@ -31,4 +31,31 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.post('/', async (req, res) => {
+  try {
+    const { nome, endereco, responsavel, ativo } = req.body;
+
+    if (!nome || !endereco || !responsavel) {
+      return res.status(400).json({ error: 'Campos obrigatórios: nome, endereco, responsavel' });
+    }
+
+    const sheets = await getSheets();
+    const id = Date.now().toString();
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Filiais!A:E',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[id, nome, endereco, responsavel, ativo || 'ativo']],
+      },
+    });
+
+    res.status(201).json({ message: 'Filial cadastrada com sucesso!', id });
+  } catch (error) {
+    console.error('Erro ao cadastrar filial:', error);
+    res.status(500).json({ error: 'Erro ao cadastrar filial' });
+  }
+});
+
 module.exports = router;

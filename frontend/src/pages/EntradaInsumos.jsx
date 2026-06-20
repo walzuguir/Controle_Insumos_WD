@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useState, useEffect } from "react";
+import api from "../services/api";
 
 export default function EntradaInsumos() {
   const [insumos, setInsumos] = useState([]);
   const [form, setForm] = useState({
-    insumo_id: '',
-    quantidade: '',
-    unidade: '',
-    origem: 'fornecedor',
-    observacao: '',
+    insumo_id: "",
+    quantidade: "",
+    unidade: "",
+    origem: "fornecedor",
+    observacao: "",
   });
-  const [mensagem, setMensagem] = useState('');
+  const [mensagem, setMensagem] = useState("");
 
   useEffect(() => {
-    api.get('/insumos').then((res) => setInsumos(res.data));
+    api.get("/insumos").then((res) => setInsumos(res.data));
   }, []);
 
   const handleChange = (e) => {
@@ -23,68 +23,99 @@ export default function EntradaInsumos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const usuario = JSON.parse(localStorage.getItem('usuario'));
-      await api.post('/movimentacoes', {
+      const usuario = JSON.parse(localStorage.getItem("usuario"));
+      await api.post("/movimentacoes", {
         id: Date.now().toString(),
         data: new Date().toISOString(),
-        tipo: 'entrada',
+        tipo: "entrada",
         insumo_id: form.insumo_id,
         filial_origem: form.origem,
         filial_destino: usuario.filial_id,
         quantidade: form.quantidade,
         responsavel_id: usuario.id,
       });
-      setMensagem('Entrada registrada com sucesso!');
-      setForm({ insumo_id: '', quantidade: '', unidade: '', origem: 'fornecedor', observacao: '' });
+      setMensagem("Entrada registrada com sucesso!");
+      setForm({
+        insumo_id: "",
+        quantidade: "",
+        unidade: "",
+        origem: "fornecedor",
+        observacao: "",
+      });
     } catch {
-      setMensagem('Erro ao registrar entrada.');
+      setMensagem("Erro ao registrar entrada.");
     }
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '40px auto', padding: '32px' }}>
+    <div style={{ maxWidth: "500px", margin: "40px auto", padding: "32px" }}>
       <h2>Registrar Entrada de Insumo</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: "16px" }}>
           <label>Insumo</label>
           <select
             name="insumo_id"
             value={form.insumo_id}
             onChange={handleChange}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "8px",
+              marginTop: "4px",
+            }}
           >
             <option value="">Selecione...</option>
             {insumos.map((i) => (
-              <option key={i.id} value={i.id}>{i.nome}</option>
+              <option key={i.id} value={i.id}>
+                {i.nome}
+              </option>
             ))}
           </select>
         </div>
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: "16px" }}>
           <label>Quantidade</label>
           <input
             type="number"
             name="quantidade"
             value={form.quantidade}
             onChange={handleChange}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "8px",
+              marginTop: "4px",
+            }}
           />
         </div>
-<div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: "16px" }}>
           <label>Origem</label>
           <select
             name="origem"
             value={form.origem}
             onChange={handleChange}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "8px",
+              marginTop: "4px",
+            }}
           >
             <option value="fornecedor">Fornecedor</option>
             <option value="CD">CD (Centro de Distribuição)</option>
           </select>
         </div>
-        {mensagem && <p style={{ color: 'green' }}>{mensagem}</p>}
+        {mensagem && <p style={{ color: "green" }}>{mensagem}</p>}
         <button
           type="submit"
-          style={{ width: '100%', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+          style={{
+            width: "100%",
+            padding: "10px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
         >
           Registrar Entrada
         </button>
