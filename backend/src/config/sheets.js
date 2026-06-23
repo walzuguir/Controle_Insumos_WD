@@ -17,4 +17,25 @@ const getSheets = async () => {
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
 
-module.exports = { getSheets, SPREADSHEET_ID };
+const getNextId = async (aba) => {
+  const sheets = await getSheets();
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${aba}!A:A`,
+  });
+
+  const rows = response.data.values;
+  if (!rows || rows.length <= 1) {
+    return 1;
+  }
+
+  const ids = rows.slice(1)
+    .map(row => parseInt(row[0]))
+    .filter(id => !isNaN(id));
+
+  if (ids.length === 0) return 1;
+
+  return Math.max(...ids) + 1;
+};
+
+module.exports = { getSheets, SPREADSHEET_ID, getNextId };

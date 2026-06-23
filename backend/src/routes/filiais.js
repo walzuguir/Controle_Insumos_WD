@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getSheets, SPREADSHEET_ID } = require('../config/sheets');
+const { getSheets, SPREADSHEET_ID, getNextId } = require('../config/sheets');
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res) => { 
   try {
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Filiais!A:E',
+      range: 'Filiais!A:G',
     });
 
     const rows = response.data.values;
@@ -40,14 +40,15 @@ router.post('/', async (req, res) => {
     }
 
     const sheets = await getSheets();
-    const id = Date.now().toString();
+    const id = await getNextId('Filiais');
+    const agora = new Date().toISOString();
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Filiais!A:E',
+      range: 'Filiais!A:G',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[id, nome, endereco, responsavel, ativo || 'ativo']],
+        values: [[id, nome, endereco, responsavel, ativo || 'ativo', agora, agora]],
       },
     });
 

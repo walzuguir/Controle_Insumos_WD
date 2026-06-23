@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getSheets, SPREADSHEET_ID } = require('../config/sheets');
+const { getSheets, SPREADSHEET_ID, getNextId } = require('../config/sheets');
 
 router.get('/', async (req, res) => {
   try {
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Movimentacoes!A:H',
+      range: 'Movimentacoes!A:J',
     });
 
     const rows = response.data.values;
@@ -33,15 +33,18 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { id, data, tipo, insumo_id, filial_origem, filial_destino, quantidade, responsavel_id } = req.body;
+    const { tipo, insumo_id, filial_origem, filial_destino, quantidade, responsavel_id } = req.body;
 
     const sheets = await getSheets();
+    const id = await getNextId('Movimentacoes');
+    const agora = new Date().toISOString();
+
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Movimentacoes!A:H',
+      range: 'Movimentacoes!A:J',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[id, data, tipo, insumo_id, filial_origem, filial_destino, quantidade, responsavel_id]],
+        values: [[id, agora, tipo, insumo_id, filial_origem, filial_destino, quantidade, responsavel_id, agora, agora]],
       },
     });
 

@@ -25,8 +25,6 @@ export default function EntradaInsumos() {
     try {
       const usuario = JSON.parse(localStorage.getItem("usuario"));
       await api.post("/movimentacoes", {
-        id: Date.now().toString(),
-        data: new Date().toISOString(),
         tipo: "entrada",
         insumo_id: form.insumo_id,
         filial_origem: form.origem,
