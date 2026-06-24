@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import EntradaInsumos from "./pages/EntradaInsumos";
 import CadastroGestor from "./pages/CadastroGestor";
+import SaidaInsumos from './pages/SaidaInsumos';
 import PrivateRoute from './components/PrivateRoute';
 
 export default function App() {
@@ -13,6 +14,11 @@ export default function App() {
           <EntradaInsumos /></PrivateRoute>} />
         <Route path="/gestor" element={<PrivateRoute>
           <CadastroGestor /></PrivateRoute>
+        } />
+        <Route path="/saida" element={
+          <PrivateRoute>
+            <SaidaInsumos />
+          </PrivateRoute>
         } />
       </Routes>
     </BrowserRouter>

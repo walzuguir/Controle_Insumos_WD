@@ -36,9 +36,33 @@ router.post('/', async (req, res) => {
     const { tipo, insumo_id, filial_origem, filial_destino, quantidade, responsavel_id } = req.body;
 
     const sheets = await getSheets();
-    const id = await getNextId('Movimentacoes');
     const agora = new Date().toISOString();
 
+    if (tipo === 'transferencia') {
+      const idSaida = await getNextId('Movimentacoes');
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'Movimentacoes!A:J',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[idSaida, agora, 'saida', insumo_id, filial_origem, filial_destino, quantidade, responsavel_id, agora, agora]],
+        },
+      });
+
+      const idEntrada = await getNextId('Movimentacoes');
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'Movimentacoes!A:J',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[idEntrada, agora, 'entrada', insumo_id, filial_origem, filial_destino, quantidade, responsavel_id, agora, agora]],
+        },
+      });
+
+      return res.status(201).json({ message: 'Transferência registrada com sucesso!' });
+    }
+
+    const id = await getNextId('Movimentacoes');
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: 'Movimentacoes!A:J',
