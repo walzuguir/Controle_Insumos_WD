@@ -6,17 +6,23 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErro('');
+    setLoading(true);
     try {
       const response = await api.post('/auth/login', { email, senha });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
       navigate('/entrada');
     } catch {
-      setErro('Email ou senha incorretos');
+      setTimeout(() => {
+        setErro('Email ou senha incorretos');
+        setLoading(false);
+      }, 1000);
     }
   };
 
@@ -43,8 +49,8 @@ export default function Login() {
           />
         </div>
         {erro && <p style={{ color: 'red' }}>{erro}</p>}
-        <button type="submit" style={{ width: '100%', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-          Entrar
+        <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', background: loading ? '#93c5fd' : '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer' }}>
+          {loading ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
     </div>
