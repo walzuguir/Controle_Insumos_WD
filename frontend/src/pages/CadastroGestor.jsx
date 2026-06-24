@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Header from '../components/Header';
 import api from '../services/api';
 
 export default function CadastroGestor() {
@@ -42,6 +43,8 @@ export default function CadastroGestor() {
   };
 
   return (
+    <>
+    <Header />
     <div style={{ maxWidth: '700px', margin: '40px auto', padding: '32px' }}>
       <h2>Painel do Gestor</h2>
 
@@ -120,5 +123,6 @@ export default function CadastroGestor() {
         </div>
       )}
     </div>
+    </>
   );
 }

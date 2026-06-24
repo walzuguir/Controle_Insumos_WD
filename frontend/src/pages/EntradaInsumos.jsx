@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Header from "../components/Header";
 import api from "../services/api";
 
 export default function EntradaInsumos() {
@@ -46,6 +47,8 @@ export default function EntradaInsumos() {
   };
 
   return (
+    <>
+    <Header />
     <div style={{ maxWidth: "500px", margin: "40px auto", padding: "32px" }}>
       <h2>Registrar Entrada de Insumo</h2>
       <form onSubmit={handleSubmit}>
@@ -119,5 +122,6 @@ export default function EntradaInsumos() {
         </button>
       </form>
     </div>
+    </>
   );
 }
