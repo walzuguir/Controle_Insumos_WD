@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import EntradaInsumos from "./pages/EntradaInsumos";
 import CadastroGestor from "./pages/CadastroGestor";
 import SaidaInsumos from './pages/SaidaInsumos';
+import Relatorio from './pages/Relatorio';
 import PrivateRoute from './components/PrivateRoute';
 
 export default function App() {
@@ -18,6 +19,13 @@ export default function App() {
         <Route path="/saida" element={
           <PrivateRoute>
             <SaidaInsumos />
+          </PrivateRoute>
+        } />
+      </Routes>
+      <Routes>
+        <Route path="/relatorio" element={
+          <PrivateRoute>
+            <Relatorio />
           </PrivateRoute>
         } />
       </Routes>

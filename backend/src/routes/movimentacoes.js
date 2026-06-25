@@ -4,6 +4,8 @@ const { getSheets, SPREADSHEET_ID, getNextId } = require('../config/sheets');
 
 router.get('/', async (req, res) => {
   try {
+    const { filial, insumo_id, tipo, data_inicio, data_fim } = req.query;
+    
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -16,13 +18,29 @@ router.get('/', async (req, res) => {
     }
 
     const headers = rows[0];
-    const data = rows.slice(1).map(row => {
+    let data = rows.slice(1).map(row => {
       const obj = {};
       headers.forEach((header, index) => {
         obj[header] = row[index] || '';
       });
       return obj;
     });
+
+    if (filial) {
+      data = data.filter(m => m.filial_origem === filial || m.filial_destino === filial);
+    }
+    if (insumo_id) {
+      data = data.filter(m => m.insumo_id === insumo_id);
+    }
+    if (tipo) {
+      data = data.filter(m => m.tipo === tipo);
+    }
+    if (data_inicio) {
+      data = data.filter(m => new Date(m.data) >= new Date(data_inicio));
+    }
+    if (data_fim) {
+      data = data.filter(m => new Date(m.data) <= new Date(data_fim));
+    }
 
     res.json(data);
   } catch (error) {
