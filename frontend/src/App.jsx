@@ -14,20 +14,11 @@ export default function App() {
         <Route path="/entrada" element={<PrivateRoute>
           <EntradaInsumos /></PrivateRoute>} />
         <Route path="/gestor" element={<PrivateRoute>
-          <CadastroGestor /></PrivateRoute>
-        } />
-        <Route path="/saida" element={
-          <PrivateRoute>
-            <SaidaInsumos />
-          </PrivateRoute>
-        } />
-      </Routes>
-      <Routes>
-        <Route path="/relatorio" element={
-          <PrivateRoute>
-            <Relatorio />
-          </PrivateRoute>
-        } />
+          <CadastroGestor /></PrivateRoute>} />
+        <Route path="/saida" element={<PrivateRoute>
+          <SaidaInsumos /></PrivateRoute>} />
+        <Route path="/relatorio" element={<PrivateRoute>
+          <Relatorio /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );
