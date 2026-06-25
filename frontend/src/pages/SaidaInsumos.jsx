@@ -46,7 +46,7 @@ export default function SaidaInsumos() {
         tipo: form.tipo,
         insumo_id: form.insumo_id,
         filial_origem: usuario.filial_id,
-        filial_destino: form.filial_destino || usuario.filial_id,
+        filial_destino: form.tipo === 'transferencia' ? form.filial_destino : '',
         quantidade: form.quantidade,
         responsavel_id: usuario.id,
       });
