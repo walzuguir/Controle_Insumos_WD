@@ -5,6 +5,7 @@ import CadastroGestor from "./pages/CadastroGestor";
 import SaidaInsumos from './pages/SaidaInsumos';
 import Relatorio from './pages/Relatorio';
 import Dashboard from './pages/Dashboard';
+import PainelGaps from './pages/PainelGaps';
 import PrivateRoute from './components/PrivateRoute';
 
 export default function App() {
@@ -22,6 +23,8 @@ export default function App() {
           <Relatorio /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute>
           <Dashboard /></PrivateRoute>} />
+        <Route path="/gaps" element={<PrivateRoute>
+          <PainelGaps /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );
