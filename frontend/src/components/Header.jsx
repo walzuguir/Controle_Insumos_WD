@@ -1,8 +1,19 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+  const nomesTelas = {
+    '/saida': 'Registrar Saída',
+    '/gestor': 'Painel do Gestor',
+    '/dashboard': 'Dashboard de Estoque',
+    '/relatorio': 'Relatório de Movimentações',
+    '/gaps': 'Painel de GAPs',
+    '/entrada': 'Registrar Entrada',
+  };
 
 export default function Header() {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const location = useLocation();
+  const telaNome = nomesTelas[location.pathname] || 'Controle de Insumos';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -23,6 +34,7 @@ export default function Header() {
         <span style={{ fontWeight: '500', fontSize: '15px' }}>
           Controle de Insumos
         </span>
+        <span style={{ fontSize: '13px', color: '#6b7280', marginLeft: '8px' }}>/ {telaNome}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={{ fontSize: '13px', color: '#6b7280' }}>
