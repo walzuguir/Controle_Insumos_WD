@@ -39,7 +39,6 @@ export default function Relatorio() {
             nomeFilia(m.filial_destino),
             m.quantidade,
         ]);
-
         const csv = [headers, ...linhas].map(row => row.join(';')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -49,39 +48,41 @@ export default function Relatorio() {
         link.click();
     };
 
+    const filterStyle = { padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' };
+
     return (
         <>
             <Header />
             <div style={{ maxWidth: '900px', margin: '40px auto', padding: '32px' }}>
                 <h2>Relatório de Movimentações</h2>
 
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', marginTop: '16px' }}>
-                    <select name="filial" value={filtros.filial} onChange={handleFiltro} style={{ padding: '8px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', marginTop: '16px', alignItems: 'center' }}>
+                    <select name="filial" value={filtros.filial} onChange={handleFiltro} style={filterStyle}>
                         <option value="">Todas as filiais</option>
                         {filiais.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
                     </select>
 
-                    <select name="insumo_id" value={filtros.insumo_id} onChange={handleFiltro} style={{ padding: '8px' }}>
+                    <select name="insumo_id" value={filtros.insumo_id} onChange={handleFiltro} style={filterStyle}>
                         <option value="">Todos os insumos</option>
                         {insumos.map(i => <option key={i.id} value={i.id}>{i.nome}</option>)}
                     </select>
 
-                    <select name="tipo" value={filtros.tipo} onChange={handleFiltro} style={{ padding: '8px' }}>
+                    <select name="tipo" value={filtros.tipo} onChange={handleFiltro} style={filterStyle}>
                         <option value="">Todos os tipos</option>
                         <option value="entrada">Entrada</option>
                         <option value="saida">Saída</option>
                     </select>
 
-                    <input type="date" name="data_inicio" value={filtros.data_inicio} onChange={handleFiltro} style={{ padding: '8px' }} />
-                    <input type="date" name="data_fim" value={filtros.data_fim} onChange={handleFiltro} style={{ padding: '8px' }} />
+                    <input type="date" name="data_inicio" value={filtros.data_inicio} onChange={handleFiltro} style={filterStyle} />
+                    <input type="date" name="data_fim" value={filtros.data_fim} onChange={handleFiltro} style={filterStyle} />
 
                     <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end' }}>
-                    <button onClick={buscar} style={{ padding: '8px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                        Filtrar
-                    </button>
-                    <button onClick={exportarCSV} style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                        Exportar CSV
-                    </button>
+                        <button onClick={buscar} style={{ padding: '8px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                            Filtrar
+                        </button>
+                        <button onClick={exportarCSV} style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                            Exportar CSV
+                        </button>
                     </div>
                 </div>
 

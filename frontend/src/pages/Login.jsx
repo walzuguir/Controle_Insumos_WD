@@ -31,21 +31,23 @@ export default function Login() {
       <h2>Controle de Insumos</h2>
       <form onSubmit={handleLogin}>
         <div style={{ marginBottom: '16px' }}>
-          <label>Email</label>
+          <label htmlFor="email" style={{ fontSize: '14px', fontWeight: '500', color: '#436eb3' }}>Email</label>
           <input
             type="email"
+            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
+            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
           />
         </div>
         <div style={{ marginBottom: '16px' }}>
-          <label>Senha</label>
+          <label htmlFor="senha" style={{ fontSize: '14px', fontWeight: '500', color: '#436eb3' }}>Senha</label>
           <input
             type="password"
+            id="senha"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
+            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
           />
         </div>
         {erro && <p style={{ color: 'red' }}>{erro}</p>}

@@ -53,9 +53,12 @@ export default function EntradaInsumos() {
       <h2>Registrar Entrada de Insumo</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "16px" }}>
-          <label>Insumo</label>
+          <label htmlFor="insumo_id" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
+            Insumo
+          </label>
           <select
             name="insumo_id"
+            id="insumo_id"
             value={form.insumo_id}
             onChange={handleChange}
             style={{
@@ -63,6 +66,7 @@ export default function EntradaInsumos() {
               width: "100%",
               padding: "8px",
               marginTop: "4px",
+              border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
             }}
           >
             <option value="">Selecione...</option>
@@ -74,10 +78,13 @@ export default function EntradaInsumos() {
           </select>
         </div>
         <div style={{ marginBottom: "16px" }}>
-          <label>Quantidade</label>
+          <label htmlFor="quantidade" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
+            Quantidade
+          </label>
           <input
             type="number"
             name="quantidade"
+            id="quantidade"
             value={form.quantidade}
             onChange={handleChange}
             style={{
@@ -85,13 +92,17 @@ export default function EntradaInsumos() {
               width: "100%",
               padding: "8px",
               marginTop: "4px",
+              border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
             }}
           />
         </div>
         <div style={{ marginBottom: "16px" }}>
-          <label>Origem</label>
+          <label htmlFor="origem" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
+            Origem
+          </label>
           <select
             name="origem"
+            id="origem"
             value={form.origem}
             onChange={handleChange}
             style={{
@@ -99,6 +110,7 @@ export default function EntradaInsumos() {
               width: "100%",
               padding: "8px",
               marginTop: "4px",
+              border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
             }}
           >
             <option value="fornecedor">Fornecedor</option>

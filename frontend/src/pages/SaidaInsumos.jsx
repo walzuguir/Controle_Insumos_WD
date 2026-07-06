@@ -60,6 +60,9 @@ export default function SaidaInsumos() {
     }
   };
 
+  const labelStyle = { fontSize: '14px', fontWeight: '500', color: '#374151' };
+  const inputStyle = { display: 'block', width: '100%', padding: '8px', marginTop: '4px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' };
+
   return (
     <>
       <Header />
@@ -67,26 +70,16 @@ export default function SaidaInsumos() {
         <h2>Registrar Saída de Insumo</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label>Tipo</label>
-            <select
-              name="tipo"
-              value={form.tipo}
-              onChange={handleChange}
-              style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
-            >
+            <label htmlFor="tipo" style={labelStyle}>Tipo</label>
+            <select name="tipo" id="tipo" value={form.tipo} onChange={handleChange} style={inputStyle}>
               <option value="saida">Consumo na filial</option>
               <option value="transferencia">Transferência CD → Filial</option>
             </select>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label>Insumo</label>
-            <select
-              name="insumo_id"
-              value={form.insumo_id}
-              onChange={handleChange}
-              style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
-            >
+            <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>
+            <select name="insumo_id" id="insumo_id" value={form.insumo_id} onChange={handleChange} style={inputStyle}>
               <option value="">Selecione...</option>
               {insumos.map((i) => (
                 <option key={i.id} value={i.id}>{i.nome}</option>
@@ -95,25 +88,14 @@ export default function SaidaInsumos() {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label>Quantidade</label>
-            <input
-              type="number"
-              name="quantidade"
-              value={form.quantidade}
-              onChange={handleChange}
-              style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
-            />
+            <label htmlFor="quantidade" style={labelStyle}>Quantidade</label>
+            <input type="number" name="quantidade" id="quantidade" value={form.quantidade} onChange={handleChange} style={inputStyle} />
           </div>
 
           {form.tipo === 'transferencia' && (
             <div style={{ marginBottom: '16px' }}>
-              <label>Filial destino</label>
-              <select
-                name="filial_destino"
-                value={form.filial_destino}
-                onChange={handleChange}
-                style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px' }}
-              >
+              <label htmlFor="filial_destino" style={labelStyle}>Filial destino</label>
+              <select name="filial_destino" id="filial_destino" value={form.filial_destino} onChange={handleChange} style={inputStyle}>
                 <option value="">Selecione...</option>
                 {filiais.map((f) => (
                   <option key={f.id} value={f.id}>{f.nome}</option>
@@ -128,11 +110,7 @@ export default function SaidaInsumos() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '10px', background: loading ? '#93c5fd' : '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer' }}
-          >
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', background: loading ? '#93c5fd' : '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer' }}>
             {loading ? 'Registrando...' : 'Registrar Saída'}
           </button>
         </form>
