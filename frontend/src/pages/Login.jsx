@@ -17,7 +17,7 @@ export default function Login() {
       const response = await api.post('/auth/login', { email, senha });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
-      navigate('/entrada');
+      navigate('/home');
     } catch {
       setTimeout(() => {
         setErro('Email ou senha incorretos');
