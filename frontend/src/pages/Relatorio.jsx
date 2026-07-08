@@ -9,6 +9,9 @@ export default function Relatorio() {
     const [filtros, setFiltros] = useState({ filial: '', insumo_id: '', tipo: '', data_inicio: '', data_fim: '' });
     const [loading, setLoading] = useState(false);
 
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const ehGestor = usuario?.filial_id === 'gestor';
+
     useEffect(() => {
         api.get('/insumos').then(res => setInsumos(res.data));
         api.get('/filiais').then(res => setFiliais(res.data));
@@ -18,7 +21,11 @@ export default function Relatorio() {
     const buscar = async () => {
         setLoading(true);
         const params = new URLSearchParams();
-        Object.entries(filtros).forEach(([k, v]) => { if (v) params.append(k, v); });
+        const filtrosFinais = { ...filtros };
+        if (!ehGestor) {
+            filtrosFinais.filial = usuario.filial_id;
+        }
+        Object.entries(filtrosFinais).forEach(([k, v]) => { if (v) params.append(k, v); });
         const res = await api.get(`/movimentacoes?${params.toString()}`);
         setMovimentacoes(res.data);
         setLoading(false);
@@ -57,10 +64,12 @@ export default function Relatorio() {
                 <h2>Relatório de Movimentações</h2>
 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', marginTop: '16px', alignItems: 'center' }}>
-                    <select name="filial" value={filtros.filial} onChange={handleFiltro} style={filterStyle}>
-                        <option value="">Todas as filiais</option>
-                        {filiais.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
-                    </select>
+                    {ehGestor && (
+                        <select name="filial" value={filtros.filial} onChange={handleFiltro} style={filterStyle}>
+                            <option value="">Todas as filiais</option>
+                            {filiais.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                        </select>
+                    )}
 
                     <select name="insumo_id" value={filtros.insumo_id} onChange={handleFiltro} style={filterStyle}>
                         <option value="">Todos os insumos</option>
