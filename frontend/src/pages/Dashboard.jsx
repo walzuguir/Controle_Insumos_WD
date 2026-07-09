@@ -5,7 +5,11 @@ import Header from '../components/Header';
 export default function Dashboard() {
   const [saldos, setSaldos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filiais, setFiliais] = useState([]);
+  const [filialSelecionada, setFilialSelecionada] = useState('');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const ehGestor = usuario.filial_id === 'gestor';
+
 
   useEffect(() => {
     api.get('/saldos').then(res => {
@@ -14,18 +18,36 @@ export default function Dashboard() {
         dados = dados.filter(s => s.filial_id === usuario.filial_id);
       }
       setSaldos(dados);
+      api.get('/filiais').then(res => setFiliais(res.data));
       setLoading(false);
     });
   }, []);
 
-  const criticos = saldos.filter(s => s.status === 'critico');
-  const ok = saldos.filter(s => s.status === 'ok');
+  const saldosFiltrados = filialSelecionada
+    ? saldos.filter(s => s.filial_id === filialSelecionada)
+    : saldos;
+
+  const criticos = saldosFiltrados.filter(s => s.status === 'critico');
+  const ok = saldosFiltrados.filter(s => s.status === 'ok');
 
   return (
     <>
       <Header />
       <div style={{ maxWidth: '900px', margin: '40px auto', padding: '32px' }}>
         <h2>Dashboard de Estoque</h2>
+              {ehGestor && (
+        <div style={{ marginBottom: '24px', marginTop: '16px' }}>
+          <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginRight: '8px' }}>Filtrar por filial:</label>
+          <select
+            value={filialSelecionada}
+            onChange={(e) => setFilialSelecionada(e.target.value)}
+            style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+          >
+            <option value="">Todas as filiais</option>
+            {filiais.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+          </select>
+        </div>
+      )}
 
         <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', marginTop: '16px' }}>
           <div style={{ flex: 1, padding: '20px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
@@ -80,10 +102,10 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {saldos.length === 0 && !loading && (
+            {saldosFiltrados.length === 0 && !loading && (
               <tr><td colSpan="6" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhum dado encontrado</td></tr>
             )}
-            {saldos.map((s, i) => (
+            {saldosFiltrados.map((s, i) => (
               <tr key={i} style={{ background: s.status === 'critico' ? '#fef2f2' : 'white' }}>
                 <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{s.filial_nome}</td>
                 <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{s.insumo_nome}</td>
