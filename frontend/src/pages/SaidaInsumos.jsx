@@ -45,7 +45,7 @@ export default function SaidaInsumos() {
       await api.post('/movimentacoes', {
         tipo: form.tipo,
         insumo_id: form.insumo_id,
-        filial_origem: usuario.filial_id,
+        filial_origem: usuario.filial_id === 'gestor' ? '1' : usuario.filial_id,
         filial_destino: form.tipo === 'transferencia' ? form.filial_destino : '',
         quantidade: form.quantidade,
         responsavel_id: usuario.id,

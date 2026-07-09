@@ -28,8 +28,8 @@ export default function EntradaInsumos() {
       await api.post("/movimentacoes", {
         tipo: "entrada",
         insumo_id: form.insumo_id,
-        filial_origem: form.origem,
-        filial_destino: usuario.filial_id,
+        filial_origem: "fornecedor",
+        filial_destino: "1",
         quantidade: form.quantidade,
         responsavel_id: usuario.id,
       });
@@ -96,27 +96,7 @@ export default function EntradaInsumos() {
             }}
           />
         </div>
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="origem" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
-            Origem
-          </label>
-          <select
-            name="origem"
-            id="origem"
-            value={form.origem}
-            onChange={handleChange}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "8px",
-              marginTop: "4px",
-              border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
-            }}
-          >
-            <option value="fornecedor">Fornecedor</option>
-            <option value="CD">CD (Centro de Distribuição)</option>
-          </select>
-        </div>
+        
         {mensagem && <p style={{ color: "green" }}>{mensagem}</p>}
         <button
           type="submit"
