@@ -38,4 +38,22 @@ const getNextId = async (aba) => {
   return Math.max(...ids) + 1;
 };
 
-module.exports = { getSheets, SPREADSHEET_ID, getNextId };
+const findRowById = async (aba, id) => {
+  const sheets = await getSheets();
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${aba}!A:A`,
+  });
+
+  const rows = response.data.values;
+  if (!rows) return -1;
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === id) {
+      return i + 1;
+    }
+  }
+  return -1;
+};
+
+module.exports = { getSheets, SPREADSHEET_ID, getNextId, findRowById };
