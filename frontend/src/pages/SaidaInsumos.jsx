@@ -60,7 +60,7 @@ export default function SaidaInsumos() {
     }
   };
 
-  const labelStyle = { fontSize: '14px', fontWeight: '500', color: '#374151' };
+  const labelStyle = { fontSize: '14px', fontWeight: '500', color: '#436eb3' };
   const inputStyle = { display: 'block', width: '100%', padding: '8px', marginTop: '4px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' };
 
   return (

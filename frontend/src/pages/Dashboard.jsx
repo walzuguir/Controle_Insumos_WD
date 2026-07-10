@@ -37,7 +37,7 @@ export default function Dashboard() {
         <h2>Dashboard de Estoque</h2>
               {ehGestor && (
         <div style={{ marginBottom: '24px', marginTop: '16px' }}>
-          <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginRight: '8px' }}>Filtrar por filial:</label>
+          <label style={{ fontSize: '14px', fontWeight: '500', color: '#436eb3', marginRight: '8px' }}>Filtrar por filial:</label>
           <select
             value={filialSelecionada}
             onChange={(e) => setFilialSelecionada(e.target.value)}

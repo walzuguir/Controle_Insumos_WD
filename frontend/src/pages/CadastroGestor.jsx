@@ -125,7 +125,7 @@ export default function CadastroGestor() {
   };
 
 
-  const labelStyle = { display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '4px' };
+  const labelStyle = { display: 'block', fontSize: '14px', fontWeight: '500', color: '#436eb3', marginBottom: '4px' };
   const inputStyle = { display: 'block', width: '100%', padding: '8px', marginBottom: '16px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' };
   const btnEditar = { padding: '4px 12px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' };
   const btnDesativar = { padding: '4px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' };
