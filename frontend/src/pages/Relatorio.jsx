@@ -37,7 +37,7 @@ export default function Relatorio() {
     const nomeInsumo = (id) => insumos.find(i => i.id === id)?.nome || id;
 
     const exportarCSV = () => {
-        const headers = ['Data', 'Tipo', 'Insumo', 'Origem', 'Destino', 'Quantidade'];
+        const headers = ['Data', 'Tipo', 'Insumo', 'Origem', 'Destino', 'Quantidade', 'Nota Fiscal'];
         const linhas = movimentacoes.map(m => [
             new Date(m.data).toLocaleString('pt-BR'),
             m.tipo,
@@ -45,6 +45,7 @@ export default function Relatorio() {
             nomeFilia(m.filial_origem),
             nomeFilia(m.filial_destino),
             m.quantidade,
+            m.nota_fiscal || '',
         ]);
         const csv = [headers, ...linhas].map(row => row.join(';')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -106,11 +107,12 @@ export default function Relatorio() {
                             <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Origem</th>
                             <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Destino</th>
                             <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Qtd</th>
+                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>NF</th>
                         </tr>
                     </thead>
                     <tbody>
                         {movimentacoes.length === 0 && !loading && (
-                            <tr><td colSpan="6" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
+                            <tr><td colSpan="7" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
                         )}
                         {movimentacoes.map(m => (
                             <tr key={m.id}>
@@ -120,6 +122,7 @@ export default function Relatorio() {
                                 <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_origem)}</td>
                                 <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_destino)}</td>
                                 <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.quantidade}</td>
+                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.nota_fiscal || '—'}</td>
                             </tr>
                         ))}
                     </tbody>

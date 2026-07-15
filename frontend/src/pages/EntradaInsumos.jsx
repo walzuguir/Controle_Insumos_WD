@@ -7,8 +7,9 @@ export default function EntradaInsumos() {
   const [form, setForm] = useState({
     insumo_id: "",
     quantidade: "",
+    nota_fiscal: "",
     unidade: "",
-    origem: "fornecedor",
+    origem: "Fornecedor",
     observacao: "",
   });
   const [mensagem, setMensagem] = useState("");
@@ -32,11 +33,13 @@ export default function EntradaInsumos() {
         filial_destino: "1",
         quantidade: form.quantidade,
         responsavel_id: usuario.id,
+        nota_fiscal: form.nota_fiscal,
       });
       setMensagem("Entrada registrada com sucesso!");
       setForm({
         insumo_id: "",
         quantidade: "",
+        nota_fiscal: "",
         unidade: "",
         origem: "fornecedor",
         observacao: "",
@@ -48,72 +51,91 @@ export default function EntradaInsumos() {
 
   return (
     <>
-    <Header />
-    <div style={{ maxWidth: "500px", margin: "40px auto", padding: "32px" }}>
-      <h2>Registrar Entrada de Insumo</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="insumo_id" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
-            Insumo
-          </label>
-          <select
-            name="insumo_id"
-            id="insumo_id"
-            value={form.insumo_id}
-            onChange={handleChange}
+      <Header />
+      <div style={{ maxWidth: "500px", margin: "40px auto", padding: "32px" }}>
+        <h2>Registrar Entrada de Insumo</h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="insumo_id" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
+              Insumo
+            </label>
+            <select
+              name="insumo_id"
+              id="insumo_id"
+              value={form.insumo_id}
+              onChange={handleChange}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "8px",
+                marginTop: "4px",
+                border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
+              }}
+            >
+              <option value="">Selecione...</option>
+              {insumos.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="quantidade" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
+              Quantidade
+            </label>
+            <input
+              type="number"
+              name="quantidade"
+              id="quantidade"
+              value={form.quantidade}
+              onChange={handleChange}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "8px",
+                marginTop: "4px",
+                border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="nota_fiscal" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
+              Nota Fiscal (opcional)
+            </label>
+            <input
+              type="text"
+              name="nota_fiscal"
+              id="nota_fiscal"
+              value={form.nota_fiscal}
+              onChange={handleChange}
+              placeholder="Ex: 000123456"
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "8px",
+                marginTop: "4px",
+                border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
+              }}
+            />
+          </div>
+          {mensagem && <p style={{ color: "green" }}>{mensagem}</p>}
+          <button
+            type="submit"
             style={{
-              display: "block",
               width: "100%",
-              padding: "8px",
-              marginTop: "4px",
-              border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
+              padding: "10px",
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
             }}
           >
-            <option value="">Selecione...</option>
-            {insumos.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="quantidade" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
-            Quantidade
-          </label>
-          <input
-            type="number"
-            name="quantidade"
-            id="quantidade"
-            value={form.quantidade}
-            onChange={handleChange}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "8px",
-              marginTop: "4px",
-              border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
-            }}
-          />
-        </div>
-        
-        {mensagem && <p style={{ color: "green" }}>{mensagem}</p>}
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "10px",
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          Registrar Entrada
-        </button>
-      </form>
-    </div>
+            Registrar Entrada
+          </button>
+        </form>
+      </div>
     </>
   );
 }
