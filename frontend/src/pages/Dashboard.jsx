@@ -33,7 +33,7 @@ export default function Dashboard() {
   return (
     <>
       <Header />
-      <div style={{ maxWidth: '900px', margin: '40px auto', padding: '32px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
         <h2>Dashboard de Estoque</h2>
               {ehGestor && (
         <div style={{ marginBottom: '24px', marginTop: '16px' }}>
@@ -63,7 +63,8 @@ export default function Dashboard() {
         {criticos.length > 0 && (
           <>
             <h3 style={{ color: '#dc2626', marginBottom: '12px' }}>⚠ Atenção — Estoque crítico</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '32px' }}>
+            <div style={{ overflowX: 'auto', maxWidth: '100%', marginBottom: '32px' }}>
+            <table style={{ minWidth: '600px', borderCollapse: 'collapse', marginBottom: '32px' }}>
               <thead>
                 <tr style={{ background: '#fef2f2' }}>
                   <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fecaca' }}>Filial</th>
@@ -85,11 +86,13 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           </>
         )}
 
         <h3 style={{ marginBottom: '12px' }}>Estoque atual</h3>
         {loading && <p>Carregando...</p>}
+        <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f3f4f6' }}>
@@ -121,6 +124,7 @@ export default function Dashboard() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );
