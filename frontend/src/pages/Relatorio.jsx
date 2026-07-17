@@ -4,6 +4,7 @@ import Header from '../components/Header';
 
 export default function Relatorio() {
     const [movimentacoes, setMovimentacoes] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
     const [insumos, setInsumos] = useState([]);
     const [filiais, setFiliais] = useState([]);
     const [filtros, setFiltros] = useState({ filial: '', insumo_id: '', tipo: '', data_inicio: '', data_fim: '' });
@@ -15,6 +16,7 @@ export default function Relatorio() {
     useEffect(() => {
         api.get('/insumos').then(res => setInsumos(res.data));
         api.get('/filiais').then(res => setFiliais(res.data));
+        api.get('/auth/usuarios').then(res => setUsuarios(res.data));
         buscar();
     }, []);
 
@@ -35,9 +37,10 @@ export default function Relatorio() {
 
     const nomeFilia = (id) => filiais.find(f => f.id === id)?.nome || id;
     const nomeInsumo = (id) => insumos.find(i => i.id === id)?.nome || id;
+    const nomeResponsavel = (id) => usuarios.find(u => u.id === id)?.nome || id;
 
     const exportarCSV = () => {
-        const headers = ['Data', 'Tipo', 'Insumo', 'Origem', 'Destino', 'Quantidade', 'Nota Fiscal'];
+        const headers = ['Data', 'Tipo', 'Insumo', 'Origem', 'Destino', 'Quantidade', 'Nota Fiscal', 'Responsável'];
         const linhas = movimentacoes.map(m => [
             new Date(m.data).toLocaleString('pt-BR'),
             m.tipo,
@@ -46,6 +49,7 @@ export default function Relatorio() {
             nomeFilia(m.filial_destino),
             m.quantidade,
             m.nota_fiscal || '',
+            nomeResponsavel(m.responsavel_id),
         ]);
         const csv = [headers, ...linhas].map(row => row.join(';')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -98,7 +102,7 @@ export default function Relatorio() {
 
                 {loading && <p>Carregando...</p>}
                 <div style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
-                    <table style={{ minWidth: '700px', borderCollapse: 'collapse' }}>
+                    <table style={{ minWidth: '800px', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ background: '#f3f4f6' }}>
                                 <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Data</th>
@@ -108,11 +112,12 @@ export default function Relatorio() {
                                 <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Destino</th>
                                 <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Qtd</th>
                                 <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>NF</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Responsável</th>
                             </tr>
                         </thead>
                         <tbody>
                             {movimentacoes.length === 0 && !loading && (
-                                <tr><td colSpan="7" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
+                                <tr><td colSpan="8" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
                             )}
                             {movimentacoes.map(m => (
                                 <tr key={m.id}>
@@ -123,6 +128,7 @@ export default function Relatorio() {
                                     <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_destino)}</td>
                                     <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.quantidade}</td>
                                     <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.nota_fiscal || '—'}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeResponsavel(m.responsavel_id)}</td>
                                 </tr>
                             ))}
                         </tbody>

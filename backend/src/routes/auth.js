@@ -65,4 +65,34 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/usuarios', async (req, res) => {
+  try {
+    const sheets = await getSheets();
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Usuarios!A:E',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+
+    const headers = rows[0];
+    const usuarios = rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index] || '';
+      });
+      // Retorna APENAS id e nome — nunca senha_hash ou email
+      return { id: obj.id, nome: obj.nome };
+    });
+
+    res.json(usuarios);
+  } catch (error) {
+    console.error('Erro ao buscar usuários:', error);
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
+});
+
 module.exports = router;
