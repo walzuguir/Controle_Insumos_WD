@@ -42,37 +42,44 @@ export default function Header() {
   return (
     <>
       <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 24px',
         borderBottom: '1px solid #e5e7eb',
         background: '#f9fafb'
       }}>
-        <div>
-          <span style={{ fontWeight: '500', fontSize: '15px' }}>
-            Controle de Insumos
-          </span>
-          <span style={{ fontSize: '13px', color: '#6b7280', marginLeft: '8px' }}>/ {telaNome}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '13px', color: '#6b7280' }}>
-            {usuario?.nome} — {usuario?.filial_id === 'gestor' ? 'Gestor' : `Filial ${usuario?.filial_id}`}
-          </span>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '6px 12px',
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              color: '#ef4444'
-            }}
-          >
-            Sair
-          </button>
+        <div style={{
+          maxWidth: '900px',
+          margin: '0 auto',
+          padding: '12px 16px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ minWidth: 0 }}>
+            <span style={{ fontWeight: '500', fontSize: '15px' }}>
+              Controle de Insumos
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '12px', color: '#6b7280', whiteSpace: 'nowrap' }}>
+              {usuario?.filial_id === 'gestor' ? 'Gestor' : `Filial ${usuario?.filial_id}`}
+            </span>
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '6px 12px',
+                background: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                color: '#ef4444',
+                flexShrink: 0
+              }}
+            >
+              Sair
+            </button>
+          </div>
         </div>
       </div>
 

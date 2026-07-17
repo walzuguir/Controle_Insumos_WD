@@ -61,7 +61,7 @@ export default function Relatorio() {
     return (
         <>
             <Header />
-            <div style={{ maxWidth: '900px', margin: '40px auto', padding: '32px' }}>
+            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
                 <h2>Relatório de Movimentações</h2>
 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', marginTop: '16px', alignItems: 'center' }}>
@@ -97,36 +97,37 @@ export default function Relatorio() {
                 </div>
 
                 {loading && <p>Carregando...</p>}
-
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: '#f3f4f6' }}>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Data</th>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Tipo</th>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Insumo</th>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Origem</th>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Destino</th>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Qtd</th>
-                            <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>NF</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {movimentacoes.length === 0 && !loading && (
-                            <tr><td colSpan="7" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
-                        )}
-                        {movimentacoes.map(m => (
-                            <tr key={m.id}>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{new Date(m.data).toLocaleString('pt-BR')}</td>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb', color: m.tipo === 'entrada' ? 'green' : 'red' }}>{m.tipo}</td>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeInsumo(m.insumo_id)}</td>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_origem)}</td>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_destino)}</td>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.quantidade}</td>
-                                <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.nota_fiscal || '—'}</td>
+                <div style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
+                    <table style={{ minWidth: '700px', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: '#f3f4f6' }}>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Data</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Tipo</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Insumo</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Origem</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Destino</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Qtd</th>
+                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>NF</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {movimentacoes.length === 0 && !loading && (
+                                <tr><td colSpan="7" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
+                            )}
+                            {movimentacoes.map(m => (
+                                <tr key={m.id}>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{new Date(m.data).toLocaleString('pt-BR')}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', color: m.tipo === 'entrada' ? 'green' : 'red' }}>{m.tipo}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeInsumo(m.insumo_id)}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_origem)}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_destino)}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.quantidade}</td>
+                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.nota_fiscal || '—'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </>
     );
