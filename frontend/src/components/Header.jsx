@@ -76,7 +76,7 @@ export default function Header() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', padding: '8px 24px', background: 'white', borderBottom: '1px solid #e5e7eb' }}>
+      <div style={{ display: 'flex', gap: '4px', padding: '8px 24px', background: 'white', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', whiteSpace: 'nowrap' }}>
         {menuLinks.map(link => (
           <Link
             key={link.rota}
@@ -89,6 +89,7 @@ export default function Header() {
               fontWeight: location.pathname === link.rota ? '600' : '400',
               color: location.pathname === link.rota ? '#2563eb' : '#374151',
               background: location.pathname === link.rota ? '#eff6ff' : 'transparent',
+              flexShrink: 0,
             }}
           >
             {link.nome}
