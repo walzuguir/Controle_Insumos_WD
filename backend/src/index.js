@@ -7,16 +7,17 @@ const filiais = require('./routes/filiais');
 const movimentacoes = require('./routes/movimentacoes');
 const saldos = require('./routes/saldos');
 const auth = require('./routes/auth');
+const autenticar = require('./middleware/auth');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/insumos', insumos);
-app.use('/filiais', filiais);
-app.use('/movimentacoes', movimentacoes);
-app.use('/saldos', saldos);
+app.use('/insumos', autenticar, insumos);
+app.use('/filiais', autenticar, filiais);
+app.use('/movimentacoes', autenticar, movimentacoes);
+app.use('/saldos', autenticar, saldos);
 app.use('/auth', auth);
 
 app.get('/', (req, res) => {

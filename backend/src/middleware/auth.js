@@ -13,6 +13,9 @@ const autenticar = (req, res, next) => {
     req.usuario = decoded;
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Sessão expirada' });
+    }
     return res.status(403).json({ error: 'Token inválido' });
   }
 };

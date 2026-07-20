@@ -1,4 +1,5 @@
 const express = require('express');
+const autenticar = require('../middleware/auth');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -65,7 +66,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/usuarios', async (req, res) => {
+router.get('/usuarios', autenticar, async (req, res) => {
   try {
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
