@@ -125,33 +125,39 @@ export default function CadastroGestor() {
   };
 
 
-  const labelStyle = { display: 'block', fontSize: '14px', fontWeight: '500', color: '#436eb3', marginBottom: '4px' };
-  const inputStyle = { display: 'block', width: '100%', padding: '8px', marginBottom: '16px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' };
-  const btnEditar = { padding: '4px 12px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' };
-  const btnDesativar = { padding: '4px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' };
-  const btnReativar = { padding: '4px 12px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px' };
+  const labelStyle = { display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)', marginBottom: '6px' };
+  const inputStyle = { display: 'block', width: '100%', padding: '10px', marginBottom: '16px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' };
+  const thStyle = { padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px', fontWeight: '500' };
+  const tdStyle = { padding: '10px', border: '1px solid var(--cor-borda)' };
+  const btnAcao = { padding: '5px 12px', background: 'transparent', border: '1px solid var(--cor-borda)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', marginRight: '6px' };
+  const btnEditar = { ...btnAcao, color: 'var(--cor-alerta)' };
+  const btnDesativar = { ...btnAcao, color: 'var(--cor-perigo)' };
+  const btnReativar = { ...btnAcao, color: 'var(--cor-sucesso)' };
+  const btnPrimario = { padding: '11px 22px', background: 'var(--cor-destaque)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' };
+  const btnSecundario = { padding: '11px 22px', background: 'transparent', color: 'var(--cor-texto)', border: '1px solid var(--cor-borda)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' };
+  const abaStyle = (ativa) => ({ padding: '9px 18px', background: ativa ? 'var(--cor-destaque)' : 'transparent', color: ativa ? '#fff' : 'var(--cor-texto-suave)', border: `1px solid ${ativa ? 'var(--cor-destaque)' : 'var(--cor-borda)'}`, borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s' });
 
   return (
     <>
       <Header />
-      <div style={{ maxWidth: '700px', margin: '40px auto', padding: '32px' }}>
-        <h2>Painel do Gestor</h2>
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px 16px' }}>
+        <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Painel do Gestor</h2>
 
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-          <button onClick={() => setAba('insumos')} style={{ padding: '8px 16px', background: aba === 'insumos' ? '#2563eb' : '#e5e7eb', color: aba === 'insumos' ? 'white' : 'black', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-            Insumos
-          </button>
-          <button onClick={() => setAba('filiais')} style={{ padding: '8px 16px', background: aba === 'filiais' ? '#2563eb' : '#e5e7eb', color: aba === 'filiais' ? 'white' : 'black', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-            Filiais
-          </button>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', marginTop: '16px' }}>
+          <button onClick={() => setAba('insumos')} style={abaStyle(aba === 'insumos')}>Insumos</button>
+          <button onClick={() => setAba('filiais')} style={abaStyle(aba === 'filiais')}>Filiais</button>
         </div>
 
-        {mensagem && <p style={{ color: 'green', marginBottom: '16px' }}>{mensagem}</p>}
+        {mensagem && (
+          <p style={{ color: mensagem.includes('Erro') ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', marginBottom: '16px', fontSize: '14px' }}>
+            {mensagem}
+          </p>
+        )}
 
         {aba === 'insumos' && (
           <div>
-            <h3 style={{ marginBottom: '16px' }}>{editandoInsumo ? 'Editar Insumo' : 'Cadastrar Insumo'}</h3>
-            <form onSubmit={handleSubmitInsumo} style={{ marginBottom: '32px' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>{editandoInsumo ? 'Editar Insumo' : 'Cadastrar Insumo'}</h3>
+            <form onSubmit={handleSubmitInsumo} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
               <label htmlFor="nome_insumo" style={labelStyle}>Nome do insumo</label>
               <input id="nome_insumo" placeholder="Ex: Papel A4" value={formInsumo.nome} onChange={(e) => setFormInsumo({ ...formInsumo, nome: e.target.value })} required style={inputStyle} />
 
@@ -162,57 +168,57 @@ export default function CadastroGestor() {
               <input id="estoque_minimo" placeholder="Ex: 10" type="number" value={formInsumo.estoque_minimo} onChange={(e) => setFormInsumo({ ...formInsumo, estoque_minimo: e.target.value })} required style={inputStyle} />
 
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button type="submit" style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                <button type="submit" style={btnPrimario}>
                   {editandoInsumo ? 'Salvar alterações' : 'Cadastrar'}
                 </button>
                 {editandoInsumo && (
-                  <button type="button" onClick={cancelarEdicaoInsumo} style={{ padding: '10px 20px', background: '#e5e7eb', color: 'black', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                    Cancelar
-                  </button>
+                  <button type="button" onClick={cancelarEdicaoInsumo} style={btnSecundario}>Cancelar</button>
                 )}
               </div>
             </form>
 
-            <h3 style={{ marginBottom: '12px' }}>Insumos cadastrados</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f3f4f6' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Nome</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Unidade</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Estoque mínimo</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {insumos.map((i) => (
-                  <tr key={i.id} style={{ opacity: i.ativo === 'inativo' ? 0.5 : 1 }}>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>
-                      {i.nome}
-                      {i.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#dc2626' }}>(inativo)</span>}
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{i.unidade}</td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{i.estoque_minimo}</td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>
-                      <button onClick={() => editarInsumo(i)} style={btnEditar}>Editar</button>
-                      {i.ativo === 'inativo' ? (
-                        <button onClick={() => reativarInsumo(i.id)} style={btnReativar}>Reativar</button>
-                      ) : (
-                        <button onClick={() => desativarInsumo(i.id)} style={btnDesativar}>Desativar</button>
-                      )}
-                    </td>
+            <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>Insumos cadastrados</h3>
+            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+              <table style={{ width: '100%', minWidth: '520px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                    <th style={thStyle}>Nome</th>
+                    <th style={thStyle}>Unidade</th>
+                    <th style={thStyle}>Estoque mínimo</th>
+                    <th style={thStyle}>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {insumos.map((i) => (
+                    <tr key={i.id} style={{ opacity: i.ativo === 'inativo' ? 0.5 : 1 }}>
+                      <td style={tdStyle}>
+                        {i.nome}
+                        {i.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--cor-perigo)' }}>(inativo)</span>}
+                      </td>
+                      <td style={tdStyle}>{i.unidade}</td>
+                      <td style={tdStyle}>{i.estoque_minimo}</td>
+                      <td style={tdStyle}>
+                        <button onClick={() => editarInsumo(i)} style={btnEditar}>Editar</button>
+                        {i.ativo === 'inativo' ? (
+                          <button onClick={() => reativarInsumo(i.id)} style={btnReativar}>Reativar</button>
+                        ) : (
+                          <button onClick={() => desativarInsumo(i.id)} style={btnDesativar}>Desativar</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {aba === 'filiais' && (
           <div>
-            <h3 style={{ marginBottom: '16px' }}>{editandoFilial ? 'Editar Filial' : 'Cadastrar Filial'}</h3>
-            <form onSubmit={handleSubmitFilial} style={{ marginBottom: '32px' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>{editandoFilial ? 'Editar Filial' : 'Cadastrar Filial'}</h3>
+            <form onSubmit={handleSubmitFilial} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
               <label htmlFor="nome_filial" style={labelStyle}>Nome da filial</label>
-              <input id="nome_filial" placeholder="Ex: Filial Centro" value={formFilial.nome} onChange={(e) => setFormFilial({ ...formFilial, nome: e.target.value })} required style={inputStyle} />
+              <input id="nome_filial" placeholder="Ex: WD Botafogo" value={formFilial.nome} onChange={(e) => setFormFilial({ ...formFilial, nome: e.target.value })} required style={inputStyle} />
 
               <label htmlFor="endereco" style={labelStyle}>Endereço</label>
               <input id="endereco" placeholder="Ex: Rua da Assembleia, 10 - Centro, RJ" value={formFilial.endereco} onChange={(e) => setFormFilial({ ...formFilial, endereco: e.target.value })} required style={inputStyle} />
@@ -221,48 +227,48 @@ export default function CadastroGestor() {
               <input id="responsavel" placeholder="Ex: João Silva" value={formFilial.responsavel} onChange={(e) => setFormFilial({ ...formFilial, responsavel: e.target.value })} required style={inputStyle} />
 
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button type="submit" style={{ padding: '10px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                <button type="submit" style={btnPrimario}>
                   {editandoFilial ? 'Salvar alterações' : 'Cadastrar'}
                 </button>
                 {editandoFilial && (
-                  <button type="button" onClick={cancelarEdicaoFilial} style={{ padding: '10px 20px', background: '#e5e7eb', color: 'black', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-                    Cancelar
-                  </button>
+                  <button type="button" onClick={cancelarEdicaoFilial} style={btnSecundario}>Cancelar</button>
                 )}
               </div>
             </form>
 
-            <h3 style={{ marginBottom: '12px' }}>Filiais cadastradas</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f3f4f6' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Nome</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Endereço</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Responsável</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filiais.map((f) => (
-                  <tr key={f.id} style={{ opacity: f.ativo === 'inativo' ? 0.5 : 1 }}>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>
-                      {f.nome}
-                      {f.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#dc2626' }}>(inativo)</span>}
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{f.endereco}</td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{f.responsavel}</td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>
-                      <button onClick={() => editarFilial(f)} style={btnEditar}>Editar</button>
-                      {f.ativo === 'inativo' ? (
-                        <button onClick={() => reativarFilial(f.id)} style={btnReativar}>Reativar</button>
-                      ) : (
-                        <button onClick={() => desativarFilial(f.id)} style={btnDesativar}>Desativar</button>
-                      )}
-                    </td>
+            <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>Filiais cadastradas</h3>
+            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+              <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                    <th style={thStyle}>Nome</th>
+                    <th style={thStyle}>Endereço</th>
+                    <th style={thStyle}>Responsável</th>
+                    <th style={thStyle}>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filiais.map((f) => (
+                    <tr key={f.id} style={{ opacity: f.ativo === 'inativo' ? 0.5 : 1 }}>
+                      <td style={tdStyle}>
+                        {f.nome}
+                        {f.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--cor-perigo)' }}>(inativo)</span>}
+                      </td>
+                      <td style={tdStyle}>{f.endereco}</td>
+                      <td style={tdStyle}>{f.responsavel}</td>
+                      <td style={tdStyle}>
+                        <button onClick={() => editarFilial(f)} style={btnEditar}>Editar</button>
+                        {f.ativo === 'inativo' ? (
+                          <button onClick={() => reativarFilial(f.id)} style={btnReativar}>Reativar</button>
+                        ) : (
+                          <button onClick={() => desativarFilial(f.id)} style={btnDesativar}>Desativar</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

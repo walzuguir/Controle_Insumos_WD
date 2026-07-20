@@ -39,11 +39,11 @@ export default function Header() {
     navigate('/');
   };
 
-  return (
+return (
     <>
       <div style={{
-        borderBottom: '1px solid #e5e7eb',
-        background: '#f9fafb'
+        borderBottom: '1px solid var(--cor-borda)',
+        background: 'var(--cor-header)'
       }}>
         <div style={{
           maxWidth: '900px',
@@ -56,25 +56,26 @@ export default function Header() {
           flexWrap: 'wrap'
         }}>
           <div style={{ minWidth: 0 }}>
-            <span style={{ fontWeight: '500', fontSize: '15px' }}>
+            <span style={{ fontWeight: '500', fontSize: '15px', color: 'var(--cor-texto-titulo)' }}>
               Controle de Insumos
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '12px', color: '#6b7280', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', whiteSpace: 'nowrap' }}>
               {usuario?.filial_id === 'gestor' ? 'Gestor' : `Filial ${usuario?.filial_id}`}
             </span>
             <button
               onClick={handleLogout}
               style={{
                 padding: '6px 12px',
-                background: 'white',
-                border: '1px solid #e5e7eb',
+                background: 'transparent',
+                border: '1px solid var(--cor-borda)',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '13px',
-                color: '#ef4444',
-                flexShrink: 0
+                color: 'var(--cor-perigo)',
+                flexShrink: 0,
+                transition: 'background 0.2s'
               }}
             >
               Sair
@@ -83,25 +84,39 @@ export default function Header() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', padding: '8px 24px', background: 'white', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        {menuLinks.map(link => (
-          <Link
-            key={link.rota}
-            to={link.rota}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              fontSize: '13px',
-              textDecoration: 'none',
-              fontWeight: location.pathname === link.rota ? '600' : '400',
-              color: location.pathname === link.rota ? '#2563eb' : '#374151',
-              background: location.pathname === link.rota ? '#eff6ff' : 'transparent',
-              flexShrink: 0,
-            }}
-          >
-            {link.nome}
-          </Link>
-        ))}
+      <div style={{
+        background: 'var(--cor-superficie)',
+        borderBottom: '1px solid var(--cor-borda)'
+      }}>
+        <div style={{
+          maxWidth: '900px',
+          margin: '0 auto',
+          padding: '8px 16px',
+          display: 'flex',
+          gap: '4px',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap'
+        }}>
+          {menuLinks.map(link => (
+            <Link
+              key={link.rota}
+              to={link.rota}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                textDecoration: 'none',
+                fontWeight: location.pathname === link.rota ? '600' : '400',
+                color: location.pathname === link.rota ? 'var(--cor-destaque)' : 'var(--cor-texto-suave)',
+                background: location.pathname === link.rota ? 'rgba(30, 155, 215, 0.12)' : 'transparent',
+                flexShrink: 0,
+                transition: 'color 0.2s, background 0.2s'
+              }}
+            >
+              {link.nome}
+            </Link>
+          ))}
+        </div>
       </div>
     </>
   );

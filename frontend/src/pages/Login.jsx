@@ -26,35 +26,44 @@ export default function Login() {
     }
   };
 
-  return (
-    <div style={{ maxWidth: '400px', margin: '100px auto', padding: '32px' }}>
-      <h2>Controle de Insumos</h2>
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: '16px' }}>
-          <label htmlFor="email" style={{ fontSize: '14px', fontWeight: '500', color: '#436eb3' }}>Email</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
-          />
-        </div>
-        <div style={{ marginBottom: '16px' }}>
-          <label htmlFor="senha" style={{ fontSize: '14px', fontWeight: '500', color: '#436eb3' }}>Senha</label>
-          <input
-            type="password"
-            id="senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            style={{ display: 'block', width: '100%', padding: '8px', marginTop: '4px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
-          />
-        </div>
-        {erro && <p style={{ color: 'red' }}>{erro}</p>}
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', background: loading ? '#93c5fd' : '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer' }}>
-          {loading ? 'Entrando...' : 'Entrar'}
-        </button>
-      </form>
+return (
+    <div style={{ maxWidth: '400px', margin: '80px auto', padding: '0 16px' }}>
+      <div style={{
+        background: 'var(--cor-superficie)',
+        border: '1px solid var(--cor-borda)',
+        borderRadius: '12px',
+        padding: '32px'
+      }}>
+        <h2 style={{ color: 'var(--cor-texto-titulo)', marginTop: 0, marginBottom: '24px', textAlign: 'center' }}>
+          Controle de Insumos
+        </h2>
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="email" style={{ fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)' }}>Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ display: 'block', width: '100%', padding: '10px', marginTop: '6px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' }}
+            />
+          </div>
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="senha" style={{ fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)' }}>Senha</label>
+            <input
+              type="password"
+              id="senha"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              style={{ display: 'block', width: '100%', padding: '10px', marginTop: '6px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' }}
+            />
+          </div>
+          {erro && <p style={{ color: 'var(--cor-perigo)', fontSize: '14px', marginBottom: '16px' }}>{erro}</p>}
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '11px', background: loading ? 'var(--cor-superficie-2)' : 'var(--cor-destaque)', color: loading ? 'var(--cor-texto-suave)' : '#fff', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', transition: 'background 0.2s' }}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

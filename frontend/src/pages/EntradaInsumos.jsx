@@ -49,92 +49,48 @@ export default function EntradaInsumos() {
     }
   };
 
+  const labelStyle = { fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)' };
+  const inputStyle = { display: 'block', width: '100%', padding: '10px', marginTop: '6px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' };
+
   return (
     <>
       <Header />
-      <div style={{ maxWidth: "500px", margin: "40px auto", padding: "32px" }}>
-        <h2>Registrar Entrada de Insumo</h2>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="insumo_id" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
-              Insumo
-            </label>
-            <select
-              name="insumo_id"
-              id="insumo_id"
-              value={form.insumo_id}
-              onChange={handleChange}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "8px",
-                marginTop: "4px",
-                border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
-              }}
+      <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px 16px' }}>
+        <div style={{ background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '28px' }}>
+          <h2 style={{ color: 'var(--cor-texto-titulo)', marginTop: 0, marginBottom: '24px' }}>Registrar Entrada de Insumo</h2>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>
+              <select name="insumo_id" id="insumo_id" value={form.insumo_id} onChange={handleChange} style={inputStyle}>
+                <option value="">Selecione...</option>
+                {insumos.map((i) => (
+                  <option key={i.id} value={i.id}>{i.nome}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="quantidade" style={labelStyle}>Quantidade</label>
+              <input type="number" name="quantidade" id="quantidade" value={form.quantidade} onChange={handleChange} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="nota_fiscal" style={labelStyle}>Nota Fiscal (opcional)</label>
+              <input type="text" name="nota_fiscal" id="nota_fiscal" value={form.nota_fiscal} onChange={handleChange} placeholder="Ex: 000123456" style={inputStyle} />
+            </div>
+            {mensagem && (
+              <p style={{ color: mensagem.includes('Erro') ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
+                {mensagem}
+              </p>
+            )}
+            <button
+              type="submit"
+              style={{ width: '100%', padding: '11px', background: 'var(--cor-destaque)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'background 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--cor-destaque-hover)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--cor-destaque)'}
             >
-              <option value="">Selecione...</option>
-              {insumos.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="quantidade" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
-              Quantidade
-            </label>
-            <input
-              type="number"
-              name="quantidade"
-              id="quantidade"
-              value={form.quantidade}
-              onChange={handleChange}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "8px",
-                marginTop: "4px",
-                border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="nota_fiscal" style={{ fontSize: "14px", fontWeight: "500", color: "#436eb3" }}>
-              Nota Fiscal (opcional)
-            </label>
-            <input
-              type="text"
-              name="nota_fiscal"
-              id="nota_fiscal"
-              value={form.nota_fiscal}
-              onChange={handleChange}
-              placeholder="Ex: 000123456"
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "8px",
-                marginTop: "4px",
-                border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px'
-              }}
-            />
-          </div>
-          {mensagem && <p style={{ color: "green" }}>{mensagem}</p>}
-          <button
-            type="submit"
-            style={{
-              width: "100%",
-              padding: "10px",
-              background: "#2563eb",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
-            Registrar Entrada
-          </button>
-        </form>
+              Registrar Entrada
+            </button>
+          </form>
+        </div>
       </div>
     </>
   );

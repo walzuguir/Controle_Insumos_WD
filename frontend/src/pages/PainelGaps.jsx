@@ -50,94 +50,110 @@ export default function PainelGaps() {
 
   const totalGaps = saldosNegativos.length + filiaisAnomelas.length + filiaisSemMovimentacao.length;
 
+const tabelaStyles = (cor) => ({
+    th: { padding: '10px', textAlign: 'left', border: `1px solid ${cor}`, color: 'var(--cor-texto-suave)', fontSize: '13px', fontWeight: '500' },
+    td: { padding: '10px', border: `1px solid ${cor}` },
+  });
+  const sPerigo = tabelaStyles('var(--cor-perigo)');
+  const sAlerta = tabelaStyles('var(--cor-alerta)');
+  const sNeutro = tabelaStyles('var(--cor-borda)');
+  const descStyle = { fontSize: '13px', color: 'var(--cor-texto-suave)', marginBottom: '12px' };
+  const wrapTabela = { overflowX: 'auto', maxWidth: '100%' };
+
   return (
     <>
       <Header />
-      <div style={{ maxWidth: '900px', margin: '40px auto', padding: '32px' }}>
-        <h2>Painel de GAPs</h2>
-        <p style={{ color: '#6b7280', marginBottom: '24px' }}>Inconsistências e anomalias detectadas automaticamente</p>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
+        <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Painel de GAPs</h2>
+        <p style={{ color: 'var(--cor-texto-suave)', marginBottom: '24px' }}>Inconsistências e anomalias detectadas automaticamente</p>
 
-        <div style={{ padding: '16px 20px', background: totalGaps === 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${totalGaps === 0 ? '#bbf7d0' : '#fecaca'}`, borderRadius: '8px', marginBottom: '32px' }}>
-          <p style={{ fontWeight: '500', color: totalGaps === 0 ? '#15803d' : '#dc2626' }}>
+        <div style={{ padding: '16px 20px', background: totalGaps === 0 ? 'var(--cor-sucesso-bg)' : 'var(--cor-perigo-bg)', border: `1px solid ${totalGaps === 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}`, borderRadius: '12px', marginBottom: '32px' }}>
+          <p style={{ fontWeight: '500', color: totalGaps === 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)', margin: 0 }}>
             {totalGaps === 0 ? '✓ Nenhum GAP detectado — tudo em ordem!' : `⚠ ${totalGaps} GAP(s) detectado(s) — ação necessária`}
           </p>
         </div>
 
         {saldosNegativos.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ color: '#dc2626', marginBottom: '12px' }}>Saldos negativos</h3>
-            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>Saiu mais do que entrou — fisicamente impossível. Verifique os registros.</p>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#fef2f2' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fecaca' }}>Filial</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fecaca' }}>Insumo</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fecaca' }}>Saldo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {saldosNegativos.map((s, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: '8px', border: '1px solid #fecaca' }}>{s.filial_nome}</td>
-                    <td style={{ padding: '8px', border: '1px solid #fecaca' }}>{s.insumo_nome}</td>
-                    <td style={{ padding: '8px', border: '1px solid #fecaca', color: '#dc2626', fontWeight: '500' }}>{s.saldo}</td>
+            <h3 style={{ color: 'var(--cor-perigo)', marginBottom: '12px' }}>Saldos negativos</h3>
+            <p style={descStyle}>Saiu mais do que entrou — fisicamente impossível. Verifique os registros.</p>
+            <div style={wrapTabela}>
+              <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--cor-perigo-bg)' }}>
+                    <th style={sPerigo.th}>Filial</th>
+                    <th style={sPerigo.th}>Insumo</th>
+                    <th style={sPerigo.th}>Saldo</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {saldosNegativos.map((s, i) => (
+                    <tr key={i}>
+                      <td style={sPerigo.td}>{s.filial_nome}</td>
+                      <td style={sPerigo.td}>{s.insumo_nome}</td>
+                      <td style={{ ...sPerigo.td, color: 'var(--cor-perigo)', fontWeight: '500' }}>{s.saldo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {filiaisAnomelas.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ color: '#d97706', marginBottom: '12px' }}>Consumo anômalo</h3>
-            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>Filiais consumindo mais que o dobro da média geral.</p>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#fffbeb' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fde68a' }}>Filial</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fde68a' }}>Consumo total</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #fde68a' }}>Média geral</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filiaisAnomelas.map((f, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: '8px', border: '1px solid #fde68a' }}>{f.filial_nome}</td>
-                    <td style={{ padding: '8px', border: '1px solid #fde68a', color: '#d97706', fontWeight: '500' }}>{f.consumo}</td>
-                    <td style={{ padding: '8px', border: '1px solid #fde68a' }}>{mediaConsumo.toFixed(1)}</td>
+            <h3 style={{ color: 'var(--cor-alerta)', marginBottom: '12px' }}>Consumo anômalo</h3>
+            <p style={descStyle}>Filiais consumindo mais que o dobro da média geral.</p>
+            <div style={wrapTabela}>
+              <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--cor-alerta-bg)' }}>
+                    <th style={sAlerta.th}>Filial</th>
+                    <th style={sAlerta.th}>Consumo total</th>
+                    <th style={sAlerta.th}>Média geral</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filiaisAnomelas.map((f, i) => (
+                    <tr key={i}>
+                      <td style={sAlerta.td}>{f.filial_nome}</td>
+                      <td style={{ ...sAlerta.td, color: 'var(--cor-alerta)', fontWeight: '500' }}>{f.consumo}</td>
+                      <td style={sAlerta.td}>{mediaConsumo.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {filiaisSemMovimentacao.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ color: '#6b7280', marginBottom: '12px' }}>Filiais sem movimentação nos últimos 7 dias</h3>
-            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>Pode indicar que a filial não está registrando ou está inativa.</p>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f3f4f6' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Filial</th>
-                  <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Responsável</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filiaisSemMovimentacao.map((f, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{f.nome}</td>
-                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{f.responsavel}</td>
+            <h3 style={{ color: 'var(--cor-texto-titulo)', marginBottom: '12px' }}>Filiais sem movimentação nos últimos 7 dias</h3>
+            <p style={descStyle}>Pode indicar que a filial não está registrando ou está inativa.</p>
+            <div style={wrapTabela}>
+              <table style={{ width: '100%', minWidth: '420px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                    <th style={sNeutro.th}>Filial</th>
+                    <th style={sNeutro.th}>Responsável</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filiaisSemMovimentacao.map((f, i) => (
+                    <tr key={i}>
+                      <td style={sNeutro.td}>{f.nome}</td>
+                      <td style={sNeutro.td}>{f.responsavel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {!loading && totalGaps === 0 && (
-          <p style={{ textAlign: 'center', color: '#6b7280', marginTop: '32px' }}>Nenhuma anomalia encontrada no momento.</p>
+          <p style={{ textAlign: 'center', color: 'var(--cor-texto-suave)', marginTop: '32px' }}>Nenhuma anomalia encontrada no momento.</p>
         )}
       </div>
     </>

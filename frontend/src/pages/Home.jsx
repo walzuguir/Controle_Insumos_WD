@@ -36,75 +36,81 @@ export default function Home() {
         );
     }
 
-    return (
+return (
         <>
             <Header />
-            <div style={{ maxWidth: '900px', margin: '40px auto', padding: '32px' }}>
-                <h2>Bem-vindo, {usuario?.nome}!</h2>
+            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
+                <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Bem-vindo, {usuario?.nome}!</h2>
 
-                <div style={{ display: 'flex', gap: '16px', marginTop: '24px', marginBottom: '32px' }}>
-                    <div style={{ flex: 1, padding: '20px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                        <p style={{ fontSize: '13px', color: '#1d4ed8', marginBottom: '4px' }}>Filiais cadastradas</p>
-                        <p style={{ fontSize: '28px', fontWeight: '500', color: '#1d4ed8' }}>{filiais.length}</p>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '24px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 160px', padding: '20px', background: 'var(--cor-superficie)', borderRadius: '12px', border: '1px solid var(--cor-borda)' }}>
+                        <p style={{ fontSize: '13px', color: 'var(--cor-texto-suave)', margin: '0 0 6px' }}>Filiais cadastradas</p>
+                        <p style={{ fontSize: '28px', fontWeight: '500', color: 'var(--cor-destaque)', margin: 0 }}>{filiais.length}</p>
                     </div>
-                    <div style={{ flex: 1, padding: '20px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                        <p style={{ fontSize: '13px', color: '#15803d', marginBottom: '4px' }}>Movimentações registradas</p>
-                        <p style={{ fontSize: '28px', fontWeight: '500', color: '#15803d' }}>{movimentacoes.length}</p>
+                    <div style={{ flex: '1 1 160px', padding: '20px', background: 'var(--cor-superficie)', borderRadius: '12px', border: '1px solid var(--cor-borda)' }}>
+                        <p style={{ fontSize: '13px', color: 'var(--cor-texto-suave)', margin: '0 0 6px' }}>Insumos cadastrados</p>
+                        <p style={{ fontSize: '28px', fontWeight: '500', color: 'var(--cor-destaque)', margin: 0 }}>{insumos.length}</p>
                     </div>
-                    <div style={{ flex: 1, padding: '20px', background: criticos > 0 ? '#fef2f2' : '#f0fdf4', borderRadius: '8px', border: `1px solid ${criticos > 0 ? '#fecaca' : '#bbf7d0'}` }}>
-                        <p style={{ fontSize: '13px', color: criticos > 0 ? '#dc2626' : '#15803d', marginBottom: '4px' }}>Itens críticos</p>
-                        <p style={{ fontSize: '28px', fontWeight: '500', color: criticos > 0 ? '#dc2626' : '#15803d' }}>{criticos}</p>
+                    <div style={{ flex: '1 1 160px', padding: '20px', background: 'var(--cor-superficie)', borderRadius: '12px', border: '1px solid var(--cor-borda)' }}>
+                        <p style={{ fontSize: '13px', color: 'var(--cor-texto-suave)', margin: '0 0 6px' }}>Movimentações</p>
+                        <p style={{ fontSize: '28px', fontWeight: '500', color: 'var(--cor-texto-titulo)', margin: 0 }}>{movimentacoes.length}</p>
+                    </div>
+                    <div style={{ flex: '1 1 160px', padding: '20px', background: criticos > 0 ? 'var(--cor-perigo-bg)' : 'var(--cor-sucesso-bg)', borderRadius: '12px', border: `1px solid ${criticos > 0 ? 'var(--cor-perigo)' : 'var(--cor-sucesso)'}` }}>
+                        <p style={{ fontSize: '13px', color: 'var(--cor-texto-suave)', margin: '0 0 6px' }}>Itens críticos</p>
+                        <p style={{ fontSize: '28px', fontWeight: '500', color: criticos > 0 ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', margin: 0 }}>{criticos}</p>
                     </div>
                 </div>
 
-                <h3 style={{ marginBottom: '16px' }}>Acesso rápido</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>Acesso rápido</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', marginBottom: '32px' }}>
                     {atalhos.map(a => (
                         <button
                             key={a.rota}
                             onClick={() => navigate(a.rota)}
-                            style={{ padding: '24px 16px', background: 'white', border: `2px solid ${a.cor}`, borderRadius: '8px', cursor: 'pointer', fontSize: '15px', fontWeight: '500', color: a.cor }}
+                            style={{ padding: '20px 16px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto)', transition: 'border-color 0.2s, background 0.2s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--cor-destaque)'; e.currentTarget.style.background = 'var(--cor-superficie-2)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--cor-borda)'; e.currentTarget.style.background = 'var(--cor-superficie)'; }}
                         >
                             {a.nome}
                         </button>
                     ))}
                 </div>
-                <h3 style={{ marginBottom: '16px' }}>Últimas movimentações</h3>
-<table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '32px' }}>
-  <thead>
-    <tr style={{ background: '#f3f4f6' }}>
-      <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Data</th>
-      <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Tipo</th>
-      <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Qtd</th>
-    </tr>
-  </thead>
-  <tbody>
-    {ultimasMovimentacoes.map(m => (
-      <tr key={m.id}>
-        <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{new Date(m.data).toLocaleString('pt-BR')}</td>
-        <td style={{ padding: '8px', border: '1px solid #e5e7eb', color: m.tipo === 'entrada' ? 'green' : 'red' }}>{m.tipo}</td>
-        <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.quantidade}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+
+                <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>Últimas movimentações</h3>
+                <div style={{ overflowX: 'auto', maxWidth: '100%', marginBottom: '32px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                                <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Data</th>
+                                <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Tipo</th>
+                                <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Qtd</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ultimasMovimentacoes.map(m => (
+                                <tr key={m.id}>
+                                    <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>{new Date(m.data).toLocaleString('pt-BR')}</td>
+                                    <td style={{ padding: '10px', border: '1px solid var(--cor-borda)', color: m.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>{m.tipo}</td>
+                                    <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>{m.quantidade}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
                 {ehGestor && filiais.length > 0 && (
                     <>
-                        <h3 style={{ marginBottom: '16px' }}>Filiais</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                        <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>Filiais</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
                             {filiais.map(f => (
                                 <div
                                     key={f.id}
-                                    style={{ padding: '20px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                                    style={{ padding: '18px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '10px' }}
                                 >
-                                    <p style={{ fontWeight: '500', fontSize: '15px', marginBottom: '4px' }}>{f.nome}</p>
-                                    <p style={{ fontSize: '13px', color: '#6b7280' }}>{f.responsavel}</p>
+                                    <p style={{ fontWeight: '500', fontSize: '15px', margin: '0 0 4px', color: 'var(--cor-texto-titulo)' }}>{f.nome}</p>
+                                    <p style={{ fontSize: '13px', color: 'var(--cor-texto-suave)', margin: 0 }}>{f.responsavel}</p>
                                 </div>
                             ))}
-                            <div style={{ flex: 1, padding: '20px', background: '#faf5ff', borderRadius: '8px', border: '1px solid #e9d5ff' }}>
-                                <p style={{ fontSize: '13px', color: '#7e22ce', marginBottom: '4px' }}>Insumos cadastrados</p>
-                                <p style={{ fontSize: '28px', fontWeight: '500', color: '#7e22ce' }}>{insumos.length}</p>
-                            </div>
                         </div>
                     </>
                 )}

@@ -60,13 +60,15 @@ export default function Relatorio() {
         link.click();
     };
 
-    const filterStyle = { padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' };
+    const filterStyle = { padding: '9px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' };
+    const thStyle = { padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px', fontWeight: '500' };
+    const tdStyle = { padding: '10px', border: '1px solid var(--cor-borda)' };
 
     return (
         <>
             <Header />
             <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
-                <h2>Relatório de Movimentações</h2>
+                <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Relatório de Movimentações</h2>
 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', marginTop: '16px', alignItems: 'center' }}>
                     {ehGestor && (
@@ -91,44 +93,54 @@ export default function Relatorio() {
                     <input type="date" name="data_fim" value={filtros.data_fim} onChange={handleFiltro} style={filterStyle} />
 
                     <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end' }}>
-                        <button onClick={buscar} style={{ padding: '8px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                        <button
+                            onClick={buscar}
+                            style={{ padding: '9px 18px', background: 'var(--cor-destaque)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'background 0.2s' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--cor-destaque-hover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--cor-destaque)'}
+                        >
                             Filtrar
                         </button>
-                        <button onClick={exportarCSV} style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                        <button
+                            onClick={exportarCSV}
+                            style={{ padding: '9px 18px', background: 'transparent', color: 'var(--cor-texto)', border: '1px solid var(--cor-borda)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'border-color 0.2s' }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--cor-destaque)'}
+                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--cor-borda)'}
+                        >
                             Exportar CSV
                         </button>
                     </div>
                 </div>
 
-                {loading && <p>Carregando...</p>}
+                {loading && <p style={{ color: 'var(--cor-texto-suave)' }}>Carregando...</p>}
                 <div style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
                     <table style={{ minWidth: '800px', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr style={{ background: '#f3f4f6' }}>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Data</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Tipo</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Insumo</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Origem</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Destino</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Qtd</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>NF</th>
-                                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Responsável</th>
+                            <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                                <th style={thStyle}>Data</th>
+                                <th style={thStyle}>Tipo</th>
+                                <th style={thStyle}>Insumo</th>
+                                <th style={thStyle}>Origem</th>
+                                <th style={thStyle}>Destino</th>
+                                <th style={thStyle}>Qtd</th>
+                                <th style={thStyle}>NF</th>
+                                <th style={thStyle}>Responsável</th>
                             </tr>
                         </thead>
                         <tbody>
                             {movimentacoes.length === 0 && !loading && (
-                                <tr><td colSpan="8" style={{ padding: '16px', textAlign: 'center', color: '#6b7280' }}>Nenhuma movimentação encontrada</td></tr>
+                                <tr><td colSpan="8" style={{ padding: '16px', textAlign: 'center', color: 'var(--cor-texto-suave)' }}>Nenhuma movimentação encontrada</td></tr>
                             )}
                             {movimentacoes.map(m => (
                                 <tr key={m.id}>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{new Date(m.data).toLocaleString('pt-BR')}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb', color: m.tipo === 'entrada' ? 'green' : 'red' }}>{m.tipo}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeInsumo(m.insumo_id)}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_origem)}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeFilia(m.filial_destino)}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.quantidade}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{m.nota_fiscal || '—'}</td>
-                                    <td style={{ padding: '8px', border: '1px solid #e5e7eb' }}>{nomeResponsavel(m.responsavel_id)}</td>
+                                    <td style={tdStyle}>{new Date(m.data).toLocaleString('pt-BR')}</td>
+                                    <td style={{ ...tdStyle, color: m.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>{m.tipo}</td>
+                                    <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
+                                    <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
+                                    <td style={tdStyle}>{nomeFilia(m.filial_destino)}</td>
+                                    <td style={tdStyle}>{m.quantidade}</td>
+                                    <td style={tdStyle}>{m.nota_fiscal || '—'}</td>
+                                    <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>
                                 </tr>
                             ))}
                         </tbody>
