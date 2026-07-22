@@ -60,7 +60,12 @@ router.get('/', async (req, res) => {
       };
     });
 
-    res.json(resultado);
+    const ehGestor = req.usuario.filial_id === 'gestor';
+    const filtrado = ehGestor
+      ? resultado
+      : resultado.filter(s => s.filial_id === req.usuario.filial_id);
+
+    res.json(filtrado);
   } catch (error) {
     console.error('Erro ao calcular saldos:', error);
     res.status(500).json({ error: 'Erro ao calcular saldos' });

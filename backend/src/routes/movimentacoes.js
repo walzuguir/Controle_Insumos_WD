@@ -5,7 +5,7 @@ const { getSheets, SPREADSHEET_ID, getNextId } = require('../config/sheets');
 router.get('/', async (req, res) => {
   try {
     const { filial, insumo_id, tipo, data_inicio, data_fim } = req.query;
-    
+
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -26,8 +26,11 @@ router.get('/', async (req, res) => {
       return obj;
     });
 
-    if (filial) {
-      data = data.filter(m => m.filial_origem === filial || m.filial_destino === filial);
+    const ehGestor = req.usuario.filial_id === 'gestor';
+    const filialFiltro = ehGestor ? filial : req.usuario.filial_id;
+
+    if (filialFiltro) {
+      data = data.filter(m => m.filial_origem === filialFiltro || m.filial_destino === filialFiltro);
     }
     if (insumo_id) {
       data = data.filter(m => m.insumo_id === insumo_id);
@@ -51,7 +54,18 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { tipo, insumo_id, filial_origem, filial_destino, quantidade, responsavel_id, nota_fiscal } = req.body;
+    const { tipo, insumo_id, filial_destino, quantidade, nota_fiscal } = req.body;
+
+    const ehGestor = req.usuario.filial_id === 'gestor';
+    const responsavel_id = req.usuario.id;
+
+    if (tipo === 'transferencia' && !ehGestor) {
+      return res.status(403).json({ error: 'Apenas o gestor pode registrar transferências' });
+    }
+
+    const filial_origem = tipo === 'entrada'
+      ? 'fornecedor'
+      : (ehGestor ? '1' : req.usuario.filial_id);
 
     const sheets = await getSheets();
     const agora = new Date().toISOString();
