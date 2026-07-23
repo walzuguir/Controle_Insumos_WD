@@ -8,7 +8,8 @@ const { getSheets, SPREADSHEET_ID } = require('../config/sheets');
 router.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
-    console.log('Tentativa de login:', email);
+    const emailNormalizado = String(email || '').trim().toLowerCase();
+    console.log('Tentativa de login:', emailNormalizado);
 
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
@@ -30,7 +31,7 @@ router.post('/login', async (req, res) => {
       return obj;
     });
 
-    const usuario = usuarios.find(u => u.email === email);
+    const usuario = usuarios.find(u => u.email.trim().toLowerCase() === emailNormalizado);
     if (!usuario) {
       return res.status(401).json({ error: 'Usuário não encontrado' });
     }
