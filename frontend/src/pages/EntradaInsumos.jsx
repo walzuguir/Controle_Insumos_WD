@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import api from "../services/api";
 
@@ -13,7 +14,15 @@ export default function EntradaInsumos() {
     observacao: "",
   });
   const [mensagem, setMensagem] = useState("");
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    if (usuario?.filial_id !== 'gestor') {
+      navigate('/home');
+    }
+  }, []);
+  
   useEffect(() => {
     api.get("/insumos").then((res) => setInsumos(res.data));
   }, []);

@@ -68,6 +68,10 @@ router.post('/', async (req, res) => {
       return res.status(403).json({ error: 'Apenas o gestor pode registrar transferências' });
     }
 
+    if (tipo === 'entrada' && !ehGestor) {
+      return res.status(403).json({ error: 'Apenas o gestor pode registrar entrada de insumos' });
+    }
+    
     const qtd = Number(quantidade);
     if (!Number.isInteger(qtd) || qtd <= 0) {
       return res.status(400).json({ error: 'Quantidade deve ser um número inteiro maior que zero' });

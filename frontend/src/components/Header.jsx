@@ -20,7 +20,7 @@ export default function Header() {
 
   const menuLinks = [
     { nome: 'Início', rota: '/home' },
-    { nome: 'Entrada', rota: '/entrada' },
+    ...(ehGestor ? [{ nome: 'Entrada', rota: '/entrada' }] : []),
     { nome: 'Saída', rota: '/saida' },
     { nome: 'Dashboard', rota: '/dashboard' },
     { nome: 'Relatório', rota: '/relatorio' },
