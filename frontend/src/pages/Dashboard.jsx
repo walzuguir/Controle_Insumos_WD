@@ -7,6 +7,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [filiais, setFiliais] = useState([]);
   const [filialSelecionada, setFilialSelecionada] = useState('');
+  const [insumos, setInsumos] = useState([]);
+  const [insumoSelecionado, setInsumoSelecionado] = useState('');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const ehGestor = usuario.filial_id === 'gestor';
 
@@ -19,13 +21,15 @@ export default function Dashboard() {
       }
       setSaldos(dados);
       api.get('/filiais').then(res => setFiliais(res.data));
+      api.get('/insumos').then(res => setInsumos(res.data));
       setLoading(false);
     });
   }, []);
 
-  const saldosFiltrados = filialSelecionada
-    ? saldos.filter(s => s.filial_id === filialSelecionada)
-    : saldos;
+  const saldosFiltrados = saldos.filter(s =>
+    (!filialSelecionada || s.filial_id === filialSelecionada) &&
+    (!insumoSelecionado || s.insumo_id === insumoSelecionado)
+  );
 
   const criticos = saldosFiltrados.filter(s => s.status === 'critico');
   const ok = saldosFiltrados.filter(s => s.status === 'ok');
@@ -41,19 +45,32 @@ export default function Dashboard() {
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
         <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Dashboard de Estoque</h2>
 
-        {ehGestor && (
-          <div style={{ marginBottom: '24px', marginTop: '16px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)', marginRight: '8px' }}>Filtrar por filial:</label>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', marginTop: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {ehGestor && (
+            <div>
+              <label style={{ fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)', marginRight: '8px' }}>Filtrar por filial:</label>
+              <select
+                value={filialSelecionada}
+                onChange={(e) => setFilialSelecionada(e.target.value)}
+                style={{ padding: '9px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' }}
+              >
+                <option value="">Todas as filiais</option>
+                {filiais.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+              </select>
+            </div>
+          )}
+          <div>
+            <label style={{ fontSize: '14px', fontWeight: '500', color: 'var(--cor-texto-suave)', marginRight: '8px' }}>Filtrar por insumo:</label>
             <select
-              value={filialSelecionada}
-              onChange={(e) => setFilialSelecionada(e.target.value)}
+              value={insumoSelecionado}
+              onChange={(e) => setInsumoSelecionado(e.target.value)}
               style={{ padding: '9px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' }}
             >
-              <option value="">Todas as filiais</option>
-              {filiais.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+              <option value="">Todos os insumos</option>
+              {insumos.map(i => <option key={i.id} value={i.id}>{i.nome}</option>)}
             </select>
           </div>
-        )}
+        </div>
 
         <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', marginTop: '16px', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 200px', padding: '20px', background: 'var(--cor-sucesso-bg)', borderRadius: '12px', border: '1px solid var(--cor-sucesso)' }}>
