@@ -12,6 +12,7 @@ export default function SaidaInsumos() {
     filial_destino: '',
   });
   const [mensagem, setMensagem] = useState('');
+  const [ehErro, setEhErro] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,16 +27,19 @@ export default function SaidaInsumos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensagem('');
+    setEhErro(false);
     setLoading(true);
 
     if (!form.insumo_id || !form.quantidade) {
       setMensagem('Preencha todos os campos obrigatórios.');
+      setEhErro(true);
       setLoading(false);
       return;
     }
 
     if (form.tipo === 'transferencia' && !form.filial_destino) {
       setMensagem('Selecione a filial destino para transferência.');
+      setEhErro(true);
       setLoading(false);
       return;
     }
@@ -45,16 +49,15 @@ export default function SaidaInsumos() {
       await api.post('/movimentacoes', {
         tipo: form.tipo,
         insumo_id: form.insumo_id,
-        filial_origem: usuario.filial_id === 'gestor' ? '1' : usuario.filial_id,
         filial_destino: form.tipo === 'transferencia' ? form.filial_destino : '',
         quantidade: form.quantidade,
-        responsavel_id: usuario.id,
       });
 
       setMensagem(form.tipo === 'transferencia' ? 'Transferência registrada com sucesso!' : 'Saída registrada com sucesso!');
       setForm({ tipo: 'saida', insumo_id: '', quantidade: '', filial_destino: '' });
-    } catch {
-      setMensagem('Erro ao registrar saída.');
+    } catch (error) {
+      setMensagem(error.response?.data?.error || 'Erro ao registrar saída.');
+      setEhErro(true);
     } finally {
       setLoading(false);
     }
@@ -106,7 +109,7 @@ export default function SaidaInsumos() {
             )}
 
             {mensagem && (
-              <p style={{ color: mensagem.includes('Erro') || mensagem.includes('Preencha') || mensagem.includes('Selecione') ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
+              <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
                 {mensagem}
               </p>
             )}

@@ -14,6 +14,7 @@ export default function EntradaInsumos() {
     observacao: "",
   });
   const [mensagem, setMensagem] = useState("");
+  const [ehErro, setEhErro] = useState(false);
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const navigate = useNavigate();
 
@@ -22,7 +23,7 @@ export default function EntradaInsumos() {
       navigate('/home');
     }
   }, []);
-  
+
   useEffect(() => {
     api.get("/insumos").then((res) => setInsumos(res.data));
   }, []);
@@ -38,10 +39,7 @@ export default function EntradaInsumos() {
       await api.post("/movimentacoes", {
         tipo: "entrada",
         insumo_id: form.insumo_id,
-        filial_origem: "fornecedor",
-        filial_destino: "1",
         quantidade: form.quantidade,
-        responsavel_id: usuario.id,
         nota_fiscal: form.nota_fiscal,
       });
       setMensagem("Entrada registrada com sucesso!");
@@ -55,6 +53,7 @@ export default function EntradaInsumos() {
       });
     } catch {
       setMensagem("Erro ao registrar entrada.");
+      setEhErro(true);
     }
   };
 
@@ -85,11 +84,13 @@ export default function EntradaInsumos() {
               <label htmlFor="nota_fiscal" style={labelStyle}>Nota Fiscal (opcional)</label>
               <input type="text" name="nota_fiscal" id="nota_fiscal" value={form.nota_fiscal} onChange={handleChange} placeholder="Ex: 000123456" style={inputStyle} />
             </div>
+
             {mensagem && (
-              <p style={{ color: mensagem.includes('Erro') ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
+              <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
                 {mensagem}
               </p>
             )}
+
             <button
               type="submit"
               style={{ width: '100%', padding: '11px', background: 'var(--cor-destaque)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'background 0.2s' }}

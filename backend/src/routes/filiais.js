@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
 
-router.get('/', async (req, res) => { 
+router.get('/', async (req, res) => {
   try {
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
@@ -126,11 +126,42 @@ router.patch('/:id/desativar', async (req, res) => {
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [[agora]] },
     });
-
     res.json({ message: 'Filial desativada com sucesso!' });
   } catch (error) {
     console.error('Erro ao desativar filial:', error);
     res.status(500).json({ error: 'Erro ao desativar filial' });
+  }
+});
+
+router.patch('/:id/reativar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const linha = await findRowById('Filiais', id);
+    if (linha === -1) {
+      return res.status(404).json({ error: 'Filial não encontrada' });
+    }
+
+    const sheets = await getSheets();
+    const agora = new Date().toISOString();
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Filiais!E${linha}:E${linha}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [['ativo']] },
+    });
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Filiais!G${linha}:G${linha}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[agora]] },
+    });
+
+    res.json({ message: 'Filial reativada com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao reativar filial:', error);
+    res.status(500).json({ error: 'Erro ao reativar filial' });
   }
 });
 

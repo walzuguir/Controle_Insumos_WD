@@ -12,6 +12,7 @@ export default function CadastroGestor() {
   const [editandoInsumo, setEditandoInsumo] = useState(null);
   const [editandoFilial, setEditandoFilial] = useState(null);
   const [mensagem, setMensagem] = useState('');
+  const [ehErro, setEhErro] = useState(false);
 
   useEffect(() => {
     api.get('/insumos?incluir_inativos=true').then((res) => setInsumos(res.data));
@@ -34,6 +35,7 @@ export default function CadastroGestor() {
       setInsumos(res.data);
     } catch {
       setMensagem('Erro ao salvar insumo.');
+      setEhErro(true);
     }
   };
 
@@ -43,9 +45,11 @@ export default function CadastroGestor() {
       if (editandoFilial) {
         await api.put(`/filiais/${editandoFilial}`, formFilial);
         setMensagem('Filial atualizada com sucesso!');
+        setEhErro(false);
       } else {
         await api.post('/filiais', formFilial);
         setMensagem('Filial cadastrada com sucesso!');
+        setEhErro(false);
       }
       setFormFilial({ nome: '', endereco: '', responsavel: '', ativo: 'ativo' });
       setEditandoFilial(null);
@@ -53,6 +57,7 @@ export default function CadastroGestor() {
       setFiliais(res.data);
     } catch {
       setMensagem('Erro ao salvar filial.');
+      setEhErro(true);
     }
   };
 
@@ -67,10 +72,12 @@ export default function CadastroGestor() {
     try {
       await api.patch(`/insumos/${id}/desativar`);
       setMensagem('Insumo desativado com sucesso!');
+      setEhErro(false);
       const res = await api.get('/insumos?incluir_inativos=true');
       setInsumos(res.data);
     } catch {
       setMensagem('Erro ao desativar insumo.');
+      setEhErro(true);
     }
   };
 
@@ -85,10 +92,12 @@ export default function CadastroGestor() {
     try {
       await api.patch(`/filiais/${id}/desativar`);
       setMensagem('Filial desativada com sucesso!');
+      setEhErro(false);
       const res = await api.get('/filiais?incluir_inativos=true');
       setFiliais(res.data);
     } catch {
       setMensagem('Erro ao desativar filial.');
+      setEhErro(true);
     }
   };
 
@@ -96,10 +105,12 @@ export default function CadastroGestor() {
     try {
       await api.patch(`/insumos/${id}/reativar`);
       setMensagem('Insumo reativado com sucesso!');
+      setEhErro(false);
       const res = await api.get('/insumos?incluir_inativos=true');
       setInsumos(res.data);
     } catch {
       setMensagem('Erro ao reativar insumo.');
+      setEhErro(true);
     }
   };
 
@@ -107,10 +118,12 @@ export default function CadastroGestor() {
     try {
       await api.patch(`/filiais/${id}/reativar`);
       setMensagem('Filial reativada com sucesso!');
+      setEhErro(false);
       const res = await api.get('/filiais?incluir_inativos=true');
       setFiliais(res.data);
     } catch {
       setMensagem('Erro ao reativar filial.');
+      setEhErro(true);
     }
   };
 
@@ -149,7 +162,7 @@ export default function CadastroGestor() {
         </div>
 
         {mensagem && (
-          <p style={{ color: mensagem.includes('Erro') ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', marginBottom: '16px', fontSize: '14px' }}>
+          <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', marginBottom: '16px', fontSize: '14px' }}>
             {mensagem}
           </p>
         )}
