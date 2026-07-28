@@ -46,7 +46,9 @@ export default function Relatorio() {
             m.tipo,
             nomeInsumo(m.insumo_id),
             nomeFilia(m.filial_origem),
-            nomeFilia(m.filial_destino),
+            m.tipo === 'saida' && m.filial_destino === ""
+                ? `Consumo`
+                : nomeFilia(m.filial_destino),
             m.quantidade,
             m.nota_fiscal || '',
             nomeResponsavel(m.responsavel_id),
@@ -137,7 +139,11 @@ export default function Relatorio() {
                                     <td style={{ ...tdStyle, color: m.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>{m.tipo}</td>
                                     <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
                                     <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
-                                    <td style={tdStyle}>{nomeFilia(m.filial_destino)}</td>
+                                    <td style={tdStyle}>
+                                        {m.tipo === 'saida' && m.filial_destino === ""
+                                            ? `Consumo`
+                                            : nomeFilia(m.filial_destino)}
+                                    </td>
                                     <td style={tdStyle}>{m.quantidade}</td>
                                     <td style={tdStyle}>{m.nota_fiscal || '—'}</td>
                                     <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>

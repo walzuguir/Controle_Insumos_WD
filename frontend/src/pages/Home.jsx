@@ -19,6 +19,17 @@ export default function Home() {
         api.get('/movimentacoes').then(res => setMovimentacoes(res.data));
     }, []);
 
+    const nomeInsumo = (id) => {
+        const insumo = insumos.find(i => i.id === id);
+        return insumo ? insumo.nome : 'Insumo não encontrado';
+    };
+
+    const nomeFilial = (id) => {
+        if (!id) return 'Não informado';
+        const filial = filiais.find(f => f.id === id);
+        return filial ? filial.nome : 'Fornecedor';
+    };
+
     const criticos = saldos.filter(s => s.status === 'critico').length;
     const ultimasMovimentacoes = [...movimentacoes].reverse().slice(0, 5);
 
@@ -82,7 +93,10 @@ return (
                         <thead>
                             <tr style={{ background: 'var(--cor-superficie-2)' }}>
                                 <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Data</th>
+                                <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Insumo</th>
                                 <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Tipo</th>
+                                <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Origem</th>
+                                <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Destino</th>
                                 <th style={{ padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px' }}>Qtd</th>
                             </tr>
                         </thead>
@@ -90,7 +104,14 @@ return (
                             {ultimasMovimentacoes.map(m => (
                                 <tr key={m.id}>
                                     <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>{new Date(m.data).toLocaleString('pt-BR')}</td>
+                                    <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>{nomeInsumo(m.insumo_id)}</td>
                                     <td style={{ padding: '10px', border: '1px solid var(--cor-borda)', color: m.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>{m.tipo}</td>
+                                    <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>{nomeFilial(m.filial_origem)}</td>
+                                    <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>
+                                        {m.tipo === 'saida' && m.filial_destino === ""
+                                            ? `Consumo`
+                                            : nomeFilial(m.filial_destino)}
+                                    </td>
                                     <td style={{ padding: '10px', border: '1px solid var(--cor-borda)' }}>{m.quantidade}</td>
                                 </tr>
                             ))}
