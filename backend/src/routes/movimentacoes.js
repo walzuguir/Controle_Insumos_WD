@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId } = require('../config/sheets');
+const { parseRows, calcularSaldos, filtrarPorPerfil, verificarSaldoDisponivel } = require('../services/calculos');
 
 router.get('/', async (req, res) => {
   try {
@@ -82,7 +83,6 @@ router.post('/', async (req, res) => {
 
     const sheets = await getSheets();
 
-    // Buscar filiais para validação
     const filiaisRes = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: 'Filiais!A:E'
@@ -93,7 +93,6 @@ router.post('/', async (req, res) => {
       return Boolean(linha) && linha[4] !== 'inativo';
     };
 
-    // Validar insumo
     const insumosRes = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: 'Insumos!A:E'
@@ -106,25 +105,26 @@ router.post('/', async (req, res) => {
     let filial_origem_final = 'fornecedor';
     let destino = '';
 
+    // ============================================
     // Lógica para ENTRADA
+    // ============================================
     if (tipo === 'entrada') {
       filial_origem_final = 'fornecedor';
 
       if (ehGestor && filial_destino) {
-        // Gestor escolheu uma filial destino
         destino = filial_destino;
 
-        // Validar se a filial destino existe e está ativa
         if (!existeAtivo(filiaisRes, destino)) {
           return res.status(400).json({ error: 'Filial de destino não encontrada ou inativa' });
         }
       } else {
-        // Fallback (nunca deve acontecer porque validamos no frontend)
         return res.status(400).json({ error: 'Filial destino não informada' });
       }
     }
 
+    // ============================================
     // Lógica para SAÍDA
+    // ============================================
     if (tipo === 'saida') {
       if (ehGestor && filial_origem) {
         filial_origem_final = filial_origem;
@@ -134,9 +134,18 @@ router.post('/', async (req, res) => {
       } else {
         filial_origem_final = req.usuario.filial_id;
       }
+
+      // ✅ VALIDAÇÃO DE SALDO PARA SAÍDA
+      try {
+        await verificarSaldoDisponivel(sheets, insumo_id, filial_origem_final, qtd);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
     }
 
+    // ============================================
     // Lógica para TRANSFERÊNCIA
+    // ============================================
     if (tipo === 'transferencia') {
       if (!filial_destino) {
         return res.status(400).json({ error: 'Filial destino é obrigatória na transferência' });
@@ -151,11 +160,20 @@ router.post('/', async (req, res) => {
       if (destino === filial_origem_final) {
         return res.status(400).json({ error: 'Filial destino deve ser diferente da origem' });
       }
+
+      // ✅ VALIDAÇÃO DE SALDO PARA TRANSFERÊNCIA
+      try {
+        await verificarSaldoDisponivel(sheets, insumo_id, filial_origem_final, qtd);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
     }
 
     const agora = new Date().toISOString();
 
-    // Se for transferência, cria duas movimentações
+    // ============================================
+    // TRANSFERÊNCIA: criar duas movimentações
+    // ============================================
     if (tipo === 'transferencia') {
       const idSaida = await getNextId('Movimentacoes');
       await sheets.spreadsheets.values.append({
@@ -180,7 +198,9 @@ router.post('/', async (req, res) => {
       return res.status(201).json({ message: 'Transferência registrada com sucesso!' });
     }
 
+    // ============================================
     // Movimentação normal (entrada ou saída)
+    // ============================================
     const id = await getNextId('Movimentacoes');
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -198,4 +218,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router; // ← Confirme que está assim

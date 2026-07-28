@@ -1,3 +1,5 @@
+const { SPREADSHEET_ID } = require('../config/sheets');
+
 function parseRows(resposta) {
   const rows = resposta.data.values;
   if (!rows || rows.length <= 1) return [];
@@ -51,4 +53,39 @@ function filtrarPorPerfil(saldos, filialUsuario) {
   return saldos.filter(s => s.filial_id === filialUsuario);
 }
 
-module.exports = { parseRows, calcularSaldos, filtrarPorPerfil };
+async function verificarSaldoDisponivel(sheets, insumo_id, filial_id, quantidade) {
+  const movimentacoesRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Movimentacoes!A:K'
+  });
+  
+  const insumosRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Insumos!A:G'
+  });
+  
+  const filiaisRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Filiais!A:G'
+  });
+
+  const saldos = calcularSaldos(
+    parseRows(movimentacoesRes),
+    parseRows(insumosRes),
+    parseRows(filiaisRes)
+  );
+
+  const saldoAtual = saldos.find(s => 
+    s.insumo_id === insumo_id && s.filial_id === filial_id
+  );
+
+  const saldoDisponivel = saldoAtual ? saldoAtual.saldo : 0;
+
+  if (saldoDisponivel < quantidade) {
+    throw new Error(`Saldo insuficiente. Disponível: ${saldoDisponivel}, Solicitado: ${quantidade}`);
+  }
+
+  return saldoDisponivel;
+}
+
+module.exports = { parseRows, calcularSaldos, filtrarPorPerfil, verificarSaldoDisponivel };

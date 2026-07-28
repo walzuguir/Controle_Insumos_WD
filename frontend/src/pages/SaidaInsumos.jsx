@@ -14,6 +14,8 @@ export default function SaidaInsumos() {
   const [mensagem, setMensagem] = useState('');
   const [ehErro, setEhErro] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saldos, setSaldos] = useState([]);
+  const [saldoDisponivel, setSaldoDisponivel] = useState(null);
 
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const ehGestor = usuario?.filial_id === 'gestor';
@@ -21,7 +23,20 @@ export default function SaidaInsumos() {
   useEffect(() => {
     api.get('/insumos').then((res) => setInsumos(res.data));
     api.get('/filiais').then((res) => setFiliais(res.data));
+    api.get('/saldos').then((res) => setSaldos(res.data));
   }, []);
+
+  useEffect(() => {
+    if (form.insumo_id && (ehGestor ? form.filial_origem : usuario?.filial_id)) {
+      const filialId = ehGestor ? form.filial_origem : usuario?.filial_id;
+      const saldo = saldos.find(s =>
+        s.insumo_id === form.insumo_id && s.filial_id === filialId
+      );
+      setSaldoDisponivel(saldo ? saldo.saldo : 0);
+    } else {
+      setSaldoDisponivel(null);
+    }
+  }, [form.insumo_id, form.filial_origem, saldos, ehGestor, usuario?.filial_id]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -54,6 +69,13 @@ export default function SaidaInsumos() {
       return;
     }
 
+    if (saldoDisponivel !== null && parseFloat(form.quantidade) > saldoDisponivel) {
+      setMensagem(`Saldo insuficiente. Disponível: ${saldoDisponivel}`);
+      setEhErro(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         tipo: form.tipo,
@@ -61,7 +83,6 @@ export default function SaidaInsumos() {
         quantidade: form.quantidade,
       };
 
-      // Se for gestor, envia a filial_origem selecionada
       if (ehGestor) {
         payload.filial_origem = form.filial_origem;
       }
@@ -80,6 +101,8 @@ export default function SaidaInsumos() {
         filial_origem: '',
         filial_destino: ''
       });
+      const saldosAtualizados = await api.get('/saldos');
+      setSaldos(saldosAtualizados.data);
     } catch (error) {
       setMensagem(error.response?.data?.error || 'Erro ao registrar saída.');
       setEhErro(true);
@@ -139,6 +162,24 @@ export default function SaidaInsumos() {
               <input type="number" name="quantidade" id="quantidade" value={form.quantidade} onChange={handleChange} style={inputStyle} />
             </div>
 
+            {saldoDisponivel !== null && (
+              <div style={{
+                marginBottom: '16px',
+                padding: '8px 12px',
+                background: 'var(--cor-superficie-2)',
+                borderRadius: '6px',
+                fontSize: '13px',
+                color: saldoDisponivel < parseFloat(form.quantidade || 0) ? 'var(--cor-perigo)' : 'var(--cor-sucesso)'
+              }}>
+                Saldo disponível: <strong>{saldoDisponivel}</strong> unidades
+                {form.quantidade && parseFloat(form.quantidade) > saldoDisponivel && (
+                  <span style={{ color: 'var(--cor-perigo)', marginLeft: '8px' }}>
+                    ⚠️ Saldo insuficiente!
+                  </span>
+                )}
+              </div>
+            )}
+
             {form.tipo === 'transferencia' && (
               <div style={{ marginBottom: '16px' }}>
                 <label htmlFor="filial_destino" style={labelStyle}>Filial destino</label>
@@ -159,8 +200,25 @@ export default function SaidaInsumos() {
 
             <button
               type="submit"
-              disabled={loading}
-              style={{ width: '100%', padding: '11px', background: loading ? 'var(--cor-superficie-2)' : 'var(--cor-destaque)', color: loading ? 'var(--cor-texto-suave)' : '#fff', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', transition: 'background 0.2s' }}
+              disabled={loading || (saldoDisponivel !== null && form.quantidade && parseFloat(form.quantidade) > saldoDisponivel)}
+              style={{
+                width: '100%',
+                padding: '11px',
+                background: (loading || (saldoDisponivel !== null && form.quantidade && parseFloat(form.quantidade) > saldoDisponivel))
+                  ? 'var(--cor-superficie-2)'
+                  : 'var(--cor-destaque)',
+                color: (loading || (saldoDisponivel !== null && form.quantidade && parseFloat(form.quantidade) > saldoDisponivel))
+                  ? 'var(--cor-texto-suave)'
+                  : '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: (loading || (saldoDisponivel !== null && form.quantidade && parseFloat(form.quantidade) > saldoDisponivel))
+                  ? 'not-allowed'
+                  : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                transition: 'background 0.2s'
+              }}
             >
               {loading ? 'Registrando...' : 'Registrar Saída'}
             </button>
