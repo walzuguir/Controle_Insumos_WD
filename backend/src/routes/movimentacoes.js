@@ -29,9 +29,12 @@ router.get('/', async (req, res) => {
     const ehGestor = req.usuario.filial_id === 'gestor';
     const filialFiltro = ehGestor ? filial : req.usuario.filial_id;
 
-    if (filialFiltro) {
+    if (filialFiltro && !ehGestor) {
+      data = data.filter(m => m.filial_origem === filialFiltro || m.filial_destino === filialFiltro);
+    } else if (filialFiltro && ehGestor) {
       data = data.filter(m => m.filial_origem === filialFiltro || m.filial_destino === filialFiltro);
     }
+
     if (insumo_id) {
       data = data.filter(m => m.insumo_id === insumo_id);
     }
@@ -54,7 +57,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { tipo, insumo_id, filial_destino, quantidade, nota_fiscal } = req.body;
+    const { tipo, insumo_id, filial_destino, quantidade, nota_fiscal, filial_origem } = req.body;
 
     const ehGestor = req.usuario.filial_id === 'gestor';
     const responsavel_id = req.usuario.id;
@@ -71,39 +74,69 @@ router.post('/', async (req, res) => {
     if (tipo === 'entrada' && !ehGestor) {
       return res.status(403).json({ error: 'Apenas o gestor pode registrar entrada de insumos' });
     }
-    
+
     const qtd = Number(quantidade);
     if (!Number.isInteger(qtd) || qtd <= 0) {
       return res.status(400).json({ error: 'Quantidade deve ser um número inteiro maior que zero' });
     }
 
-    const filial_origem = tipo === 'entrada'
-      ? 'fornecedor'
-      : (ehGestor ? '1' : req.usuario.filial_id);
-
-    let destino = '';
-    if (tipo === 'entrada') {
-      destino = ehGestor ? '1' : req.usuario.filial_id;
-    } else if (tipo === 'transferencia') {
-      destino = filial_destino;
-    }
-
     const sheets = await getSheets();
 
-    const [insumosRes, filiaisRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Insumos!A:E' }),
-      sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Filiais!A:E' }),
-    ]);
+    // Buscar filiais para validação
+    const filiaisRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Filiais!A:E'
+    });
 
     const existeAtivo = (resposta, id) => {
       const linha = (resposta.data.values || []).slice(1).find(r => r[0] === id);
       return Boolean(linha) && linha[4] !== 'inativo';
     };
 
+    // Validar insumo
+    const insumosRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Insumos!A:E'
+    });
+
     if (!existeAtivo(insumosRes, insumo_id)) {
       return res.status(400).json({ error: 'Insumo não encontrado ou inativo' });
     }
 
+    let filial_origem_final = 'fornecedor';
+    let destino = '';
+
+    // Lógica para ENTRADA
+    if (tipo === 'entrada') {
+      filial_origem_final = 'fornecedor';
+
+      if (ehGestor && filial_destino) {
+        // Gestor escolheu uma filial destino
+        destino = filial_destino;
+
+        // Validar se a filial destino existe e está ativa
+        if (!existeAtivo(filiaisRes, destino)) {
+          return res.status(400).json({ error: 'Filial de destino não encontrada ou inativa' });
+        }
+      } else {
+        // Fallback (nunca deve acontecer porque validamos no frontend)
+        return res.status(400).json({ error: 'Filial destino não informada' });
+      }
+    }
+
+    // Lógica para SAÍDA
+    if (tipo === 'saida') {
+      if (ehGestor && filial_origem) {
+        filial_origem_final = filial_origem;
+        if (!existeAtivo(filiaisRes, filial_origem_final)) {
+          return res.status(400).json({ error: 'Filial de origem não encontrada ou inativa' });
+        }
+      } else {
+        filial_origem_final = req.usuario.filial_id;
+      }
+    }
+
+    // Lógica para TRANSFERÊNCIA
     if (tipo === 'transferencia') {
       if (!filial_destino) {
         return res.status(400).json({ error: 'Filial destino é obrigatória na transferência' });
@@ -111,13 +144,18 @@ router.post('/', async (req, res) => {
       if (!existeAtivo(filiaisRes, filial_destino)) {
         return res.status(400).json({ error: 'Filial destino não encontrada ou inativa' });
       }
-      if (filial_destino === filial_origem) {
+
+      filial_origem_final = ehGestor && filial_origem ? filial_origem : req.usuario.filial_id;
+      destino = filial_destino;
+
+      if (destino === filial_origem_final) {
         return res.status(400).json({ error: 'Filial destino deve ser diferente da origem' });
       }
     }
 
     const agora = new Date().toISOString();
 
+    // Se for transferência, cria duas movimentações
     if (tipo === 'transferencia') {
       const idSaida = await getNextId('Movimentacoes');
       await sheets.spreadsheets.values.append({
@@ -125,7 +163,7 @@ router.post('/', async (req, res) => {
         range: 'Movimentacoes!A:K',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [[idSaida, agora, 'saida', insumo_id, filial_origem, destino, qtd, responsavel_id, agora, agora, '']],
+          values: [[idSaida, agora, 'saida', insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, '']],
         },
       });
 
@@ -135,20 +173,21 @@ router.post('/', async (req, res) => {
         range: 'Movimentacoes!A:K',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [[idEntrada, agora, 'entrada', insumo_id, filial_origem, destino, qtd, responsavel_id, agora, agora, '']],
+          values: [[idEntrada, agora, 'entrada', insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, '']],
         },
       });
 
       return res.status(201).json({ message: 'Transferência registrada com sucesso!' });
     }
 
+    // Movimentação normal (entrada ou saída)
     const id = await getNextId('Movimentacoes');
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: 'Movimentacoes!A:K',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[id, agora, tipo, insumo_id, filial_origem, destino, qtd, responsavel_id, agora, agora, nota_fiscal || '']],
+        values: [[id, agora, tipo, insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, nota_fiscal || '']],
       },
     });
 

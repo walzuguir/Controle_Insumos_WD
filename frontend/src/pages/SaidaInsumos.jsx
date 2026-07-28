@@ -15,6 +15,9 @@ export default function SaidaInsumos() {
   const [ehErro, setEhErro] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const ehGestor = usuario?.filial_id === 'gestor';
+
   useEffect(() => {
     api.get('/insumos').then((res) => setInsumos(res.data));
     api.get('/filiais').then((res) => setFiliais(res.data));
@@ -37,6 +40,13 @@ export default function SaidaInsumos() {
       return;
     }
 
+    if (ehGestor && !form.filial_origem) {
+      setMensagem('Selecione a filial de origem.');
+      setEhErro(true);
+      setLoading(false);
+      return;
+    }
+
     if (form.tipo === 'transferencia' && !form.filial_destino) {
       setMensagem('Selecione a filial destino para transferência.');
       setEhErro(true);
@@ -45,16 +55,31 @@ export default function SaidaInsumos() {
     }
 
     try {
-      const usuario = JSON.parse(localStorage.getItem('usuario'));
-      await api.post('/movimentacoes', {
+      const payload = {
         tipo: form.tipo,
         insumo_id: form.insumo_id,
-        filial_destino: form.tipo === 'transferencia' ? form.filial_destino : '',
         quantidade: form.quantidade,
-      });
+      };
+
+      // Se for gestor, envia a filial_origem selecionada
+      if (ehGestor) {
+        payload.filial_origem = form.filial_origem;
+      }
+
+      if (form.tipo === 'transferencia') {
+        payload.filial_destino = form.filial_destino;
+      }
+
+      await api.post('/movimentacoes', payload);
 
       setMensagem(form.tipo === 'transferencia' ? 'Transferência registrada com sucesso!' : 'Saída registrada com sucesso!');
-      setForm({ tipo: 'saida', insumo_id: '', quantidade: '', filial_destino: '' });
+      setForm({
+        tipo: 'saida',
+        insumo_id: '',
+        quantidade: '',
+        filial_origem: '',
+        filial_destino: ''
+      });
     } catch (error) {
       setMensagem(error.response?.data?.error || 'Erro ao registrar saída.');
       setEhErro(true);
@@ -80,6 +105,24 @@ export default function SaidaInsumos() {
                 <option value="transferencia">Transferência CD → Filial</option>
               </select>
             </div>
+
+            {ehGestor && (
+              <div style={{ marginBottom: '16px' }}>
+                <label htmlFor="filial_origem" style={labelStyle}>Filial de Origem</label>
+                <select
+                  name="filial_origem"
+                  id="filial_origem"
+                  value={form.filial_origem}
+                  onChange={handleChange}
+                  style={inputStyle}
+                >
+                  <option value="">Selecione a filial...</option>
+                  {filiais.map((f) => (
+                    <option key={f.id} value={f.id}>{f.nome}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>

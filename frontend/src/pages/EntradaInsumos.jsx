@@ -5,28 +5,35 @@ import api from "../services/api";
 
 export default function EntradaInsumos() {
   const [insumos, setInsumos] = useState([]);
+  const [filiais, setFiliais] = useState([]);
   const [form, setForm] = useState({
     insumo_id: "",
     quantidade: "",
     nota_fiscal: "",
     unidade: "",
     origem: "Fornecedor",
+    filial_destino: "",
     observacao: "",
   });
   const [mensagem, setMensagem] = useState("");
   const [ehErro, setEhErro] = useState(false);
+  const [loading, setLoading] = useState(false);
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const navigate = useNavigate();
+  const ehGestor = usuario?.filial_id === 'gestor';
 
   useEffect(() => {
-    if (usuario?.filial_id !== 'gestor') {
+    if (!ehGestor) {
       navigate('/home');
     }
-  }, []);
+  }, [ehGestor, navigate]);
 
   useEffect(() => {
     api.get("/insumos").then((res) => setInsumos(res.data));
-  }, []);
+    if (ehGestor) {
+      api.get("/filiais").then((res) => setFiliais(res.data));
+    }
+  }, [ehGestor]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,26 +41,52 @@ export default function EntradaInsumos() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMensagem('');
+    setEhErro(false);
+    setLoading(true);
+
+    if (!form.insumo_id || !form.quantidade) {
+      setMensagem("Preencha todos os campos obrigatórios.");
+      setEhErro(true);
+      setLoading(false);
+      return;
+    }
+
+    if (ehGestor && !form.filial_destino) {
+      setMensagem("Selecione a filial de destino.");
+      setEhErro(true);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const usuario = JSON.parse(localStorage.getItem("usuario"));
-      await api.post("/movimentacoes", {
+      const payload = {
         tipo: "entrada",
         insumo_id: form.insumo_id,
         quantidade: form.quantidade,
-        nota_fiscal: form.nota_fiscal,
-      });
+        nota_fiscal: form.nota_fiscal || "",
+      };
+
+      if (ehGestor) {
+        payload.filial_destino = form.filial_destino;
+      }
+
+      await api.post("/movimentacoes", payload);
+
       setMensagem("Entrada registrada com sucesso!");
+      setEhErro(false);
       setForm({
         insumo_id: "",
         quantidade: "",
         nota_fiscal: "",
-        unidade: "",
-        origem: "fornecedor",
+        filial_destino: "",
         observacao: "",
       });
-    } catch {
-      setMensagem("Erro ao registrar entrada.");
+    } catch (error) {
+      setMensagem(error.response?.data?.error || "Erro ao registrar entrada.");
       setEhErro(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,6 +109,29 @@ export default function EntradaInsumos() {
                 ))}
               </select>
             </div>
+
+            {ehGestor && (
+              <div style={{ marginBottom: '16px' }}>
+                <label htmlFor="filial_destino" style={labelStyle}>Filial de Destino</label>
+                <select
+                  name="filial_destino"
+                  id="filial_destino"
+                  value={form.filial_destino}
+                  onChange={handleChange}
+                  style={inputStyle}
+                  required
+                >
+                  <option value="">Selecione a filial...</option>
+                  {filiais.map((f) => (
+                    <option key={f.id} value={f.id}>{f.nome}</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', marginTop: '4px' }}>
+                  Selecione para qual filial o insumo será direcionado
+                </p>
+              </div>
+            )}
+
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="quantidade" style={labelStyle}>Quantidade</label>
               <input type="number" name="quantidade" id="quantidade" value={form.quantidade} onChange={handleChange} style={inputStyle} />
