@@ -1,0 +1,162 @@
+const express = require('express');
+const router = express.Router();
+const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
+
+function invalidarCacheSaldos() {
+  try {
+    const saldosModule = require.cache[require.resolve('../routes/saldos')];
+    if (saldosModule) {
+      delete require.cache[require.resolve('../routes/saldos')];
+      console.log('🗑️ Cache de saldos invalidado');
+    }
+  } catch (error) {
+    // Se não conseguir, apenas loga o erro
+    console.log('⚠️ Não foi possível invalidar cache automaticamente');
+  }
+}
+
+router.get('/', async (req, res) => {
+  try {
+    const sheets = await getSheets();
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'EstoqueMinimo!A:F',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+
+    const headers = rows[0];
+    const data = rows.slice(1)
+      .map(row => {
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = row[index] || '';
+        });
+        return obj;
+      })
+      .filter(e => e.filial_id && e.insumo_id && e.estoque_minimo && e.estoque_minimo !== '');
+
+    res.json(data);
+  } catch (error) {
+    console.error('Erro ao buscar estoques mínimos:', error);
+    res.status(500).json({ error: 'Erro ao buscar estoques mínimos' });
+  }
+});
+
+router.post('/', async (req, res) => {
+  try {
+    const { filial_id, insumo_id, estoque_minimo } = req.body;
+
+    if (!filial_id || !insumo_id || estoque_minimo === undefined) {
+      return res.status(400).json({ error: 'Campos obrigatórios: filial_id, insumo_id, estoque_minimo' });
+    }
+
+    const sheets = await getSheets();
+    
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'EstoqueMinimo!A:F',
+    });
+
+    const rows = response.data.values || [];
+    let existingRow = null;
+    let existingIndex = -1;
+
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][1] === filial_id && rows[i][2] === insumo_id) {
+        existingRow = rows[i];
+        existingIndex = i;
+        break;
+      }
+    }
+
+    const agora = new Date().toISOString();
+
+    if (existingRow) {
+      const linha = existingIndex + 1;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `EstoqueMinimo!D${linha}:F${linha}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[estoque_minimo, existingRow[4] || agora, agora]],
+        },
+      });
+      
+      invalidarCacheSaldos();
+      
+      return res.json({ 
+        message: 'Estoque mínimo atualizado com sucesso!',
+        atualizado: true
+      });
+    } else {
+      const id = await getNextId('EstoqueMinimo');
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'EstoqueMinimo!A:F',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[id, filial_id, insumo_id, estoque_minimo, agora, agora]],
+        },
+      });
+      
+      invalidarCacheSaldos();
+      
+      return res.status(201).json({ 
+        message: 'Estoque mínimo cadastrado com sucesso!', 
+        id 
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao salvar estoque mínimo:', error);
+    res.status(500).json({ error: 'Erro ao salvar estoque mínimo' });
+  }
+});
+
+router.delete('/:filial_id/:insumo_id', async (req, res) => {
+  try {
+    const { filial_id, insumo_id } = req.params;
+    const sheets = await getSheets();
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'EstoqueMinimo!A:F',
+    });
+
+    const rows = response.data.values || [];
+    let rowIndex = -1;
+
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][1] === filial_id && rows[i][2] === insumo_id) {
+        rowIndex = i;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return res.status(404).json({ error: 'Configuração não encontrada' });
+    }
+
+    const linha = rowIndex + 1;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `EstoqueMinimo!D${linha}:F${linha}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [['', '', '']],
+      },
+    });
+
+    invalidarCacheSaldos();
+
+    res.json({ message: 'Configuração removida com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao remover estoque mínimo:', error);
+    res.status(500).json({ error: 'Erro ao remover estoque mínimo' });
+  }
+});
+
+module.exports = router;

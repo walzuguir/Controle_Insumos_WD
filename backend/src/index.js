@@ -6,6 +6,7 @@ const insumos = require('./routes/insumos');
 const filiais = require('./routes/filiais');
 const movimentacoes = require('./routes/movimentacoes');
 const saldos = require('./routes/saldos');
+const estoqueMinimo = require('./routes/estoqueMinimo');
 const auth = require('./routes/auth');
 const autenticar = require('./middleware/auth');
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/insumos', autenticar, insumos);
 app.use('/filiais', autenticar, filiais);
 app.use('/movimentacoes', autenticar, movimentacoes);
+app.use('/estoque-minimo', autenticar, estoqueMinimo);
 app.use('/saldos', autenticar, saldos);
 app.use('/auth', auth);
 
