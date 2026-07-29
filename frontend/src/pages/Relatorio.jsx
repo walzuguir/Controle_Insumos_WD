@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function Relatorio() {
     const [movimentacoes, setMovimentacoes] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
     const [insumos, setInsumos] = useState([]);
     const [filiais, setFiliais] = useState([]);
-    const [filtros, setFiltros] = useState({ filial: '', insumo_id: '', tipo: '', data_inicio: '', data_fim: '' });
+    const [filtros, setFiltros] = useState({ filial: '', insumo_id: '', tipo: '', data_inicio: '', data_fim: '', origem: '' });
     const [loading, setLoading] = useState(false);
+    const [resumo, setResumo] = useState({ consumo: 0, transferencia: 0, total: 0 });
 
     const usuario = JSON.parse(localStorage.getItem('usuario'));
     const ehGestor = usuario?.filial_id === 'gestor';
@@ -27,10 +32,36 @@ export default function Relatorio() {
         if (!ehGestor) {
             filtrosFinais.filial = usuario.filial_id;
         }
-        Object.entries(filtrosFinais).forEach(([k, v]) => { if (v) params.append(k, v); });
+        Object.entries(filtrosFinais).forEach(([k, v]) => {
+            if (v && k !== 'origem') params.append(k, v);
+        });
+
         const res = await api.get(`/movimentacoes?${params.toString()}`);
-        setMovimentacoes(res.data);
+        let dados = res.data;
+
+        if (filtros.origem === 'consumo') {
+            dados = dados.filter(m => m.tipo === 'saida' && m.filial_destino === '');
+        } else if (filtros.origem === 'transferencia') {
+            dados = dados.filter(m => m.tipo === 'transferencia' || (m.tipo === 'saida' && m.filial_destino !== ''));
+        }
+
+        setMovimentacoes(dados);
+        calcularResumo(dados);
         setLoading(false);
+    };
+
+    const calcularResumo = (dados) => {
+        const consumo = dados
+            .filter(m => m.tipo === 'saida' && m.filial_destino === '')
+            .reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
+
+        const transferencia = dados
+            .filter(m => m.tipo === 'transferencia' || (m.tipo === 'saida' && m.filial_destino !== ''))
+            .reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
+
+        const total = dados.reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
+
+        setResumo({ consumo, transferencia, total });
     };
 
     const handleFiltro = (e) => setFiltros({ ...filtros, [e.target.name]: e.target.value });
@@ -39,20 +70,55 @@ export default function Relatorio() {
     const nomeInsumo = (id) => insumos.find(i => i.id === id)?.nome || id;
     const nomeResponsavel = (id) => usuarios.find(u => u.id === id)?.nome || id;
 
+    const getDadosGrafico = () => {
+        const consumoPorInsumo = {};
+        movimentacoes
+            .filter(m => m.tipo === 'saida' && m.filial_destino === '')
+            .forEach(m => {
+                const nome = nomeInsumo(m.insumo_id);
+                consumoPorInsumo[nome] = (consumoPorInsumo[nome] || 0) + parseFloat(m.quantidade || 0);
+            });
+
+        const sorted = Object.entries(consumoPorInsumo)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10); // Top 10
+
+        return {
+            labels: sorted.map(([nome]) => nome),
+            datasets: [
+                {
+                    label: 'Consumo (unidades)',
+                    data: sorted.map(([, qtd]) => qtd),
+                    backgroundColor: 'rgba(220, 38, 38, 0.6)',
+                    borderColor: 'rgba(220, 38, 38, 1)',
+                    borderWidth: 1,
+                },
+            ],
+        };
+    };
+
     const exportarCSV = () => {
-        const headers = ['Data', 'Tipo', 'Insumo', 'Origem', 'Destino', 'Quantidade', 'Nota Fiscal', 'Responsável'];
-        const linhas = movimentacoes.map(m => [
-            new Date(m.data).toLocaleString('pt-BR'),
-            m.tipo,
-            nomeInsumo(m.insumo_id),
-            nomeFilia(m.filial_origem),
-            m.tipo === 'saida' && m.filial_destino === ""
-                ? `Consumo`
-                : nomeFilia(m.filial_destino),
-            m.quantidade,
-            m.nota_fiscal || '',
-            nomeResponsavel(m.responsavel_id),
-        ]);
+        const headers = ['Data', 'Tipo', 'Insumo', 'Origem', 'Destino', 'Quantidade', 'Nota Fiscal', 'Responsável', 'Categoria'];
+        const linhas = movimentacoes.map(m => {
+            const isConsumo = m.tipo === 'saida' && m.filial_destino === '';
+            const isTransferencia = m.tipo === 'transferencia' || (m.tipo === 'saida' && m.filial_destino !== '');
+
+            let categoria = 'Movimentação';
+            if (isConsumo) categoria = 'Consumo';
+            else if (isTransferencia) categoria = 'Transferência';
+
+            return [
+                new Date(m.data).toLocaleString('pt-BR'),
+                m.tipo,
+                nomeInsumo(m.insumo_id),
+                nomeFilia(m.filial_origem),
+                m.tipo === 'saida' && m.filial_destino === "" ? `Consumo` : nomeFilia(m.filial_destino),
+                m.quantidade,
+                m.nota_fiscal || '',
+                nomeResponsavel(m.responsavel_id),
+                categoria
+            ];
+        });
         const csv = [headers, ...linhas].map(row => row.join(';')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -65,6 +131,7 @@ export default function Relatorio() {
     const filterStyle = { padding: '9px', background: 'var(--cor-superficie-2)', border: '1px solid var(--cor-borda)', borderRadius: '6px', fontSize: '14px', color: 'var(--cor-texto)' };
     const thStyle = { padding: '10px', textAlign: 'left', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto-suave)', fontSize: '13px', fontWeight: '500' };
     const tdStyle = { padding: '10px', border: '1px solid var(--cor-borda)' };
+    const cardStyle = { padding: '16px 20px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '10px', flex: '1', minWidth: '150px' };
 
     return (
         <>
@@ -91,6 +158,12 @@ export default function Relatorio() {
                         <option value="saida">Saída</option>
                     </select>
 
+                    <select name="origem" value={filtros.origem} onChange={handleFiltro} style={filterStyle}>
+                        <option value="">Todas as movimentações</option>
+                        <option value="consumo">📊 Apenas Consumo</option>
+                        <option value="transferencia">🔄 Apenas Transferências</option>
+                    </select>
+
                     <input type="date" name="data_inicio" value={filtros.data_inicio} onChange={handleFiltro} style={filterStyle} />
                     <input type="date" name="data_fim" value={filtros.data_fim} onChange={handleFiltro} style={filterStyle} />
 
@@ -114,6 +187,51 @@ export default function Relatorio() {
                     </div>
                 </div>
 
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                    <div style={{ ...cardStyle, borderLeft: '4px solid var(--cor-perigo)' }}>
+                        <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', margin: '0 0 4px' }}>📊 Consumo</p>
+                        <p style={{ fontSize: '24px', fontWeight: '600', color: 'var(--cor-perigo)', margin: 0 }}>{resumo.consumo}</p>
+                    </div>
+                    <div style={{ ...cardStyle, borderLeft: '4px solid var(--cor-alerta)' }}>
+                        <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', margin: '0 0 4px' }}>🔄 Transferências</p>
+                        <p style={{ fontSize: '24px', fontWeight: '600', color: 'var(--cor-alerta)', margin: 0 }}>{resumo.transferencia}</p>
+                    </div>
+                    <div style={{ ...cardStyle, borderLeft: '4px solid var(--cor-destaque)' }}>
+                        <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', margin: '0 0 4px' }}>📦 Total Movimentado</p>
+                        <p style={{ fontSize: '24px', fontWeight: '600', color: 'var(--cor-destaque)', margin: 0 }}>{resumo.total}</p>
+                    </div>
+                </div>
+
+                {movimentacoes.filter(m => m.tipo === 'saida' && m.filial_destino === '').length > 0 && (
+                    <div style={{ marginBottom: '32px', background: 'var(--cor-superficie)', borderRadius: '12px', padding: '20px', border: '1px solid var(--cor-borda)' }}>
+                        <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)', fontSize: '16px' }}>📊 Top 10 Consumo por Insumo</h3>
+                        <div style={{ maxHeight: '300px' }}>
+                            <Bar
+                                data={getDadosGrafico()}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: (context) => `${context.parsed.y} unidades`
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: { stepSize: 1 }
+                                        }
+                                    }
+                                }}
+                                height={250}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {loading && <p style={{ color: 'var(--cor-texto-suave)' }}>Carregando...</p>}
                 <div style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
                     <table style={{ minWidth: '800px', borderCollapse: 'collapse' }}>
@@ -133,22 +251,26 @@ export default function Relatorio() {
                             {movimentacoes.length === 0 && !loading && (
                                 <tr><td colSpan="8" style={{ padding: '16px', textAlign: 'center', color: 'var(--cor-texto-suave)' }}>Nenhuma movimentação encontrada</td></tr>
                             )}
-                            {movimentacoes.map(m => (
-                                <tr key={m.id}>
-                                    <td style={tdStyle}>{new Date(m.data).toLocaleString('pt-BR')}</td>
-                                    <td style={{ ...tdStyle, color: m.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>{m.tipo}</td>
-                                    <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
-                                    <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
-                                    <td style={tdStyle}>
-                                        {m.tipo === 'saida' && m.filial_destino === ""
-                                            ? `Consumo`
-                                            : nomeFilia(m.filial_destino)}
-                                    </td>
-                                    <td style={tdStyle}>{m.quantidade}</td>
-                                    <td style={tdStyle}>{m.nota_fiscal || '—'}</td>
-                                    <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>
-                                </tr>
-                            ))}
+                            {movimentacoes.map(m => {
+                                const isConsumo = m.tipo === 'saida' && m.filial_destino === '';
+                                return (
+                                    <tr key={m.id} style={{ background: isConsumo ? 'rgba(220, 38, 38, 0.05)' : 'transparent' }}>
+                                        <td style={tdStyle}>{new Date(m.data).toLocaleString('pt-BR')}</td>
+                                        <td style={{ ...tdStyle, color: m.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>
+                                            {m.tipo}
+                                            {isConsumo && <span style={{ fontSize: '10px', marginLeft: '4px', background: 'var(--cor-perigo)', color: '#fff', padding: '1px 6px', borderRadius: '10px' }}>consumo</span>}
+                                        </td>
+                                        <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
+                                        <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
+                                        <td style={tdStyle}>
+                                            {isConsumo ? `Consumo` : nomeFilia(m.filial_destino)}
+                                        </td>
+                                        <td style={tdStyle}>{m.quantidade}</td>
+                                        <td style={tdStyle}>{m.nota_fiscal || '—'}</td>
+                                        <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

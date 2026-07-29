@@ -28,6 +28,9 @@ Sistema de controle de entrada e saída de insumos para 9 filiais no Rio de Jane
 4. Backend: `npm run dev` na pasta /backend
 5. Frontend: `npm run dev` na pasta /frontend
 
+# Dependências adicionais para gráficos
+npm install chart.js react-chartjs-2
+
 ## Autor
 Wilson Alzuguir — Setor de Compras
 Projeto iniciado em junho de 2026
