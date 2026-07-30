@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
+import { GitBranch, CheckCircle, AlertTriangle, AlertCircle, TrendingUp, Users } from 'lucide-react';
 
 export default function PainelGaps() {
   const [saldos, setSaldos] = useState([]);
@@ -40,17 +41,22 @@ export default function PainelGaps() {
       return { filial_nome: filial ? filial.nome : filial_id, consumo: qtd, media: mediaConsumo };
     });
 
-  const setesDias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const filiaisComMovimentacao = new Set(
+  const seteDiasAtras = useMemo(() => {
+    const dataBase = new Date();
+    dataBase.setDate(dataBase.getDate() - 7);
+    return dataBase;
+  }, []);
+
+  const filiaisComMovimentacao = useMemo(() => new Set(
     movimentacoes
-      .filter(m => new Date(m.data) >= setesDias)
+      .filter(m => new Date(m.data) >= seteDiasAtras)
       .map(m => m.filial_origem)
-  );
+  ), [movimentacoes, seteDiasAtras]);
   const filiaisSemMovimentacao = filiais.filter(f => !filiaisComMovimentacao.has(f.id));
 
   const totalGaps = saldosNegativos.length + filiaisAnomelas.length + filiaisSemMovimentacao.length;
 
-const tabelaStyles = (cor) => ({
+  const tabelaStyles = (cor) => ({
     th: { padding: '10px', textAlign: 'left', border: `1px solid ${cor}`, color: 'var(--cor-texto-suave)', fontSize: '13px', fontWeight: '500' },
     td: { padding: '10px', border: `1px solid ${cor}` },
   });
@@ -64,18 +70,47 @@ const tabelaStyles = (cor) => ({
     <>
       <Header />
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px 16px' }}>
-        <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Painel de GAPs</h2>
+        <h2 style={{ color: 'var(--cor-texto-titulo)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <GitBranch size={24} />
+          Painel de GAPs
+        </h2>
         <p style={{ color: 'var(--cor-texto-suave)', marginBottom: '24px' }}>Inconsistências e anomalias detectadas automaticamente</p>
 
-        <div style={{ padding: '16px 20px', background: totalGaps === 0 ? 'var(--cor-sucesso-bg)' : 'var(--cor-perigo-bg)', border: `1px solid ${totalGaps === 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}`, borderRadius: '12px', marginBottom: '32px' }}>
-          <p style={{ fontWeight: '500', color: totalGaps === 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)', margin: 0 }}>
-            {totalGaps === 0 ? '✓ Nenhum GAP detectado — tudo em ordem!' : `⚠ ${totalGaps} GAP(s) detectado(s) — ação necessária`}
+        <div style={{
+          padding: '16px 20px',
+          background: totalGaps === 0 ? 'var(--cor-sucesso-bg)' : 'var(--cor-perigo-bg)',
+          border: `1px solid ${totalGaps === 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}`,
+          borderRadius: '12px',
+          marginBottom: '32px'
+        }}>
+          <p style={{
+            fontWeight: '500',
+            color: totalGaps === 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            {totalGaps === 0 ? (
+              <>
+                <CheckCircle size={18} />
+                Nenhum GAP detectado — tudo em ordem!
+              </>
+            ) : (
+              <>
+                <AlertTriangle size={18} />
+                {totalGaps} GAP(s) detectado(s) — ação necessária
+              </>
+            )}
           </p>
         </div>
 
         {saldosNegativos.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ color: 'var(--cor-perigo)', marginBottom: '12px' }}>Saldos negativos</h3>
+            <h3 style={{ color: 'var(--cor-perigo)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AlertCircle size={18} />
+              Saldos negativos
+            </h3>
             <p style={descStyle}>Saiu mais do que entrou — fisicamente impossível. Verifique os registros.</p>
             <div style={wrapTabela}>
               <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse' }}>
@@ -102,7 +137,10 @@ const tabelaStyles = (cor) => ({
 
         {filiaisAnomelas.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ color: 'var(--cor-alerta)', marginBottom: '12px' }}>Consumo anômalo</h3>
+            <h3 style={{ color: 'var(--cor-alerta)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <TrendingUp size={18} />
+              Consumo anômalo
+            </h3>
             <p style={descStyle}>Filiais consumindo mais que o dobro da média geral.</p>
             <div style={wrapTabela}>
               <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse' }}>
@@ -129,7 +167,10 @@ const tabelaStyles = (cor) => ({
 
         {filiaisSemMovimentacao.length > 0 && (
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ color: 'var(--cor-texto-titulo)', marginBottom: '12px' }}>Filiais sem movimentação nos últimos 7 dias</h3>
+            <h3 style={{ color: 'var(--cor-texto-titulo)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Users size={18} />
+              Filiais sem movimentação nos últimos 7 dias
+            </h3>
             <p style={descStyle}>Pode indicar que a filial não está registrando ou está inativa.</p>
             <div style={wrapTabela}>
               <table style={{ width: '100%', minWidth: '420px', borderCollapse: 'collapse' }}>
@@ -153,7 +194,10 @@ const tabelaStyles = (cor) => ({
         )}
 
         {!loading && totalGaps === 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--cor-texto-suave)', marginTop: '32px' }}>Nenhuma anomalia encontrada no momento.</p>
+          <p style={{ textAlign: 'center', color: 'var(--cor-texto-suave)', marginTop: '32px' }}>
+            <CheckCircle size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+            Nenhuma anomalia encontrada no momento.
+          </p>
         )}
       </div>
     </>

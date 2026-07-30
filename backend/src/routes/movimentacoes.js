@@ -2,10 +2,21 @@ const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId } = require('../config/sheets');
 const { parseRows, calcularSaldos, filtrarPorPerfil, verificarSaldoDisponivel } = require('../services/calculos');
+const { getCache, setCache } = require('../services/cache');
+const { invalidarCache } = require('./saldos');
+
+let cacheMovimentacoes = null;
+let cacheMovimentacoesTimestamp = null;
+const CACHE_TTL_MOV = 30000;
 
 router.get('/', async (req, res) => {
   try {
     const { filial, insumo_id, tipo, data_inicio, data_fim } = req.query;
+    const hasFilters = filial || insumo_id || tipo || data_inicio || data_fim;
+
+    if (!hasFilters && cacheMovimentacoes && cacheMovimentacoesTimestamp && (Date.now() - cacheMovimentacoesTimestamp < CACHE_TTL_MOV)) {
+      return res.json(cacheMovimentacoes);
+    }
 
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
@@ -47,6 +58,11 @@ router.get('/', async (req, res) => {
     }
     if (data_fim) {
       data = data.filter(m => new Date(m.data) <= new Date(data_fim));
+    }
+
+    if (!hasFilters) {
+      cacheMovimentacoes = data;
+      cacheMovimentacoesTimestamp = Date.now();
     }
 
     res.json(data);
@@ -105,9 +121,6 @@ router.post('/', async (req, res) => {
     let filial_origem_final = 'fornecedor';
     let destino = '';
 
-    // ============================================
-    // Lógica para ENTRADA
-    // ============================================
     if (tipo === 'entrada') {
       filial_origem_final = 'fornecedor';
 
@@ -122,9 +135,6 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // ============================================
-    // Lógica para SAÍDA
-    // ============================================
     if (tipo === 'saida') {
       if (ehGestor && filial_origem) {
         filial_origem_final = filial_origem;
@@ -135,7 +145,6 @@ router.post('/', async (req, res) => {
         filial_origem_final = req.usuario.filial_id;
       }
 
-      // ✅ VALIDAÇÃO DE SALDO PARA SAÍDA
       try {
         await verificarSaldoDisponivel(sheets, insumo_id, filial_origem_final, qtd);
       } catch (error) {
@@ -143,9 +152,6 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // ============================================
-    // Lógica para TRANSFERÊNCIA
-    // ============================================
     if (tipo === 'transferencia') {
       if (!filial_destino) {
         return res.status(400).json({ error: 'Filial destino é obrigatória na transferência' });
@@ -161,7 +167,6 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Filial destino deve ser diferente da origem' });
       }
 
-      // ✅ VALIDAÇÃO DE SALDO PARA TRANSFERÊNCIA
       try {
         await verificarSaldoDisponivel(sheets, insumo_id, filial_origem_final, qtd);
       } catch (error) {
@@ -171,9 +176,6 @@ router.post('/', async (req, res) => {
 
     const agora = new Date().toISOString();
 
-    // ============================================
-    // TRANSFERÊNCIA: criar duas movimentações
-    // ============================================
     if (tipo === 'transferencia') {
       const idSaida = await getNextId('Movimentacoes');
       await sheets.spreadsheets.values.append({
@@ -195,12 +197,13 @@ router.post('/', async (req, res) => {
         },
       });
 
+
+      cacheMovimentacoes = null;
+      cacheMovimentacoesTimestamp = null;
       return res.status(201).json({ message: 'Transferência registrada com sucesso!' });
+      invalidarCacheSaldos();
     }
 
-    // ============================================
-    // Movimentação normal (entrada ou saída)
-    // ============================================
     const id = await getNextId('Movimentacoes');
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -211,11 +214,14 @@ router.post('/', async (req, res) => {
       },
     });
 
+    cacheMovimentacoes = null;
+    cacheMovimentacoesTimestamp = null;
     res.status(201).json({ message: 'Movimentação registrada com sucesso!' });
+    invalidarCacheSaldos();
   } catch (error) {
     console.error('Erro ao registrar movimentação:', error);
     res.status(500).json({ error: 'Erro ao registrar movimentação' });
   }
 });
 
-module.exports = router; // ← Confirme que está assim
+module.exports = router;

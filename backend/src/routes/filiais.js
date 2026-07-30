@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
+const { getCache, setCache } = require('../services/cache');
+
+let cacheFiliais = null;
+let cacheFiliaisTimestamp = null;
+const CACHE_TTL_FILIAIS = 60000;
 
 router.get('/', async (req, res) => {
   try {
+    const incluirInativos = req.query.incluir_inativos === 'true';
+    
+    if (!incluirInativos && cacheFiliais && cacheFiliaisTimestamp && (Date.now() - cacheFiliaisTimestamp < CACHE_TTL_FILIAIS)) {
+      return res.json(cacheFiliais);
+    }
+
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -24,8 +35,13 @@ router.get('/', async (req, res) => {
       return obj;
     });
 
-    if (req.query.incluir_inativos !== 'true') {
+    if (!incluirInativos) {
       data = data.filter(item => item.ativo !== 'inativo');
+    }
+
+    if (!incluirInativos) {
+      cacheFiliais = data;
+      cacheFiliaisTimestamp = Date.now();
     }
 
     res.json(data);
@@ -56,6 +72,8 @@ router.post('/', async (req, res) => {
       },
     });
 
+    cacheFiliais = null;
+    cacheFiliaisTimestamp = null;
     res.status(201).json({ message: 'Filial cadastrada com sucesso!', id });
   } catch (error) {
     console.error('Erro ao cadastrar filial:', error);
@@ -95,6 +113,8 @@ router.put('/:id', async (req, res) => {
       },
     });
 
+    cacheFiliais = null;
+    cacheFiliaisTimestamp = null;
     res.json({ message: 'Filial atualizada com sucesso!' });
   } catch (error) {
     console.error('Erro ao atualizar filial:', error);
@@ -126,6 +146,8 @@ router.patch('/:id/desativar', async (req, res) => {
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [[agora]] },
     });
+    cacheFiliais = null;
+    cacheFiliaisTimestamp = null;
     res.json({ message: 'Filial desativada com sucesso!' });
   } catch (error) {
     console.error('Erro ao desativar filial:', error);
@@ -158,6 +180,8 @@ router.patch('/:id/reativar', async (req, res) => {
       requestBody: { values: [[agora]] },
     });
 
+    cacheFiliais = null;
+    cacheFiliaisTimestamp = null;
     res.json({ message: 'Filial reativada com sucesso!' });
   } catch (error) {
     console.error('Erro ao reativar filial:', error);

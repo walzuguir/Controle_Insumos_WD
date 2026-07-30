@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
+const { getCache, setCache } = require('../services/cache');
+
+let cacheEstoqueMinimo = null;
+let cacheEstoqueMinimoTimestamp = null;
+const CACHE_TTL_ESTOQUE = 60000;
 
 function invalidarCacheSaldos() {
   try {
@@ -17,6 +22,10 @@ function invalidarCacheSaldos() {
 
 router.get('/', async (req, res) => {
   try {
+    if (cacheEstoqueMinimo && cacheEstoqueMinimoTimestamp && (Date.now() - cacheEstoqueMinimoTimestamp < CACHE_TTL_ESTOQUE)) {
+      return res.json(cacheEstoqueMinimo);
+    }
+
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -38,6 +47,9 @@ router.get('/', async (req, res) => {
         return obj;
       })
       .filter(e => e.filial_id && e.insumo_id && e.estoque_minimo && e.estoque_minimo !== '');
+
+    cacheEstoqueMinimo = data;
+    cacheEstoqueMinimoTimestamp = Date.now();
 
     res.json(data);
   } catch (error) {
@@ -87,7 +99,9 @@ router.post('/', async (req, res) => {
       });
       
       invalidarCacheSaldos();
-      
+
+      cacheEstoqueMinimo = null;
+      cacheEstoqueMinimoTimestamp = null;
       return res.json({ 
         message: 'Estoque mínimo atualizado com sucesso!',
         atualizado: true
@@ -105,6 +119,8 @@ router.post('/', async (req, res) => {
       
       invalidarCacheSaldos();
       
+      cacheEstoqueMinimo = null;
+      cacheEstoqueMinimoTimestamp = null;
       return res.status(201).json({ 
         message: 'Estoque mínimo cadastrado com sucesso!', 
         id 
@@ -152,6 +168,8 @@ router.delete('/:filial_id/:insumo_id', async (req, res) => {
 
     invalidarCacheSaldos();
 
+    cacheEstoqueMinimo = null;
+    cacheEstoqueMinimoTimestamp = null;
     res.json({ message: 'Configuração removida com sucesso!' });
   } catch (error) {
     console.error('Erro ao remover estoque mínimo:', error);

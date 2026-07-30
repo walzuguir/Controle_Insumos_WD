@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useState, useEffect, useMemo } from 'react';import api from '../services/api';
 import Header from '../components/Header';
+import { ArrowDownCircle, AlertTriangle } from 'lucide-react';
 
 export default function SaidaInsumos() {
   const [insumos, setInsumos] = useState([]);
@@ -15,7 +15,6 @@ export default function SaidaInsumos() {
   const [ehErro, setEhErro] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saldos, setSaldos] = useState([]);
-  const [saldoDisponivel, setSaldoDisponivel] = useState(null);
 
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const ehGestor = usuario?.filial_id === 'gestor';
@@ -26,17 +25,16 @@ export default function SaidaInsumos() {
     api.get('/saldos').then((res) => setSaldos(res.data));
   }, []);
 
-  useEffect(() => {
-    if (form.insumo_id && (ehGestor ? form.filial_origem : usuario?.filial_id)) {
-      const filialId = ehGestor ? form.filial_origem : usuario?.filial_id;
-      const saldo = saldos.find(s =>
-        s.insumo_id === form.insumo_id && s.filial_id === filialId
-      );
-      setSaldoDisponivel(saldo ? saldo.saldo : 0);
-    } else {
-      setSaldoDisponivel(null);
-    }
-  }, [form.insumo_id, form.filial_origem, saldos, ehGestor, usuario?.filial_id]);
+  const saldoDisponivel = useMemo(() => {
+  if (form.insumo_id && (ehGestor ? form.filial_origem : usuario?.filial_id)) {
+    const filialId = ehGestor ? form.filial_origem : usuario?.filial_id;
+    const saldo = saldos.find(s =>
+      s.insumo_id === form.insumo_id && s.filial_id === filialId
+    );
+    return saldo ? saldo.saldo : 0;
+  }
+  return null;
+}, [form.insumo_id, form.filial_origem, saldos, ehGestor, usuario?.filial_id]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -119,7 +117,7 @@ export default function SaidaInsumos() {
       <Header />
       <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px 16px' }}>
         <div style={{ background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '28px' }}>
-          <h2 style={{ color: 'var(--cor-texto-titulo)', marginTop: 0, marginBottom: '24px' }}>Registrar Saída de Insumo</h2>
+          <h2 style={{ color: 'var(--cor-texto-titulo)', marginTop: 0, marginBottom: '24px' }}><ArrowDownCircle size={24} /> Registrar Saída de Insumo</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="tipo" style={labelStyle}>Tipo</label>
@@ -171,12 +169,7 @@ export default function SaidaInsumos() {
                 fontSize: '13px',
                 color: saldoDisponivel < parseFloat(form.quantidade || 0) ? 'var(--cor-perigo)' : 'var(--cor-sucesso)'
               }}>
-                Saldo disponível: <strong>{saldoDisponivel}</strong> unidades
-                {form.quantidade && parseFloat(form.quantidade) > saldoDisponivel && (
-                  <span style={{ color: 'var(--cor-perigo)', marginLeft: '8px' }}>
-                    ⚠️ Saldo insuficiente!
-                  </span>
-                )}
+                  <AlertTriangle size={16} /> Saldo disponível: <strong>{saldoDisponivel}</strong> unidades
               </div>
             )}
 
@@ -220,7 +213,11 @@ export default function SaidaInsumos() {
                 transition: 'background 0.2s'
               }}
             >
-              {loading ? 'Registrando...' : 'Registrar Saída'}
+              {loading ? 'Registrando...' :(
+                <>
+                  <ArrowDownCircle size={18} /> Registrar Saída
+                </>
+              )}
             </button>
           </form>
         </div>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID } = require('../config/sheets');
 const { parseRows, calcularSaldosComMinimo, getEstoquesMinimos, filtrarPorPerfil } = require('../services/calculos');
+const { getCache, setCache } = require('../services/cache');
 
 // Cache em memória
 let cacheSaldos = null;
@@ -16,12 +17,26 @@ function invalidarCache() {
   return cacheVersion;
 }
 
+function invalidarTodosCaches() {
+  cacheSaldos = null;
+  cacheSaldosTimestamp = null;
+  cacheMovimentacoes = null;
+  cacheMovimentacoesTimestamp = null;
+  cacheInsumos = null;
+  cacheInsumosTimestamp = null;
+  cacheFiliais = null;
+  cacheFiliaisTimestamp = null;
+  cacheEstoqueMinimo = null;
+  cacheEstoqueMinimoTimestamp = null;
+  console.log('🗑️ Todos os caches invalidados');
+}
+
 module.exports.invalidarCache = invalidarCache;
 
 router.get('/', async (req, res) => {
   try {
-    if (cacheSaldos && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL)) {
-      return res.json(filtrarPorPerfil(cacheSaldos, req.usuario.filial_id));
+    if (getCache('saldos') && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL)) {
+      return res.json(filtrarPorPerfil(getCache('saldos'), req.usuario.filial_id));
     }
 
     const sheets = await getSheets();
@@ -40,6 +55,7 @@ router.get('/', async (req, res) => {
       parseRows(filiaisRes),
       estoquesMinimos
     );
+    setCache( 'saldos', saldos);
 
     cacheSaldos = saldos;
     cacheTimestamp = Date.now();

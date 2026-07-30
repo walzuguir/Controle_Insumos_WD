@@ -1,9 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
+const { getCache, setCache } = require('../services/cache');
+
+let cacheInsumos = null;
+let cacheInsumosTimestamp = null;
+const CACHE_TTL_INSUMOS = 60000;
 
 router.get('/', async (req, res) => {
   try {
+
+    const incluirInativos = req.query.incluir_inativos === 'true';
+    
+    if (!incluirInativos && cacheInsumos && cacheInsumosTimestamp && (Date.now() - cacheInsumosTimestamp < CACHE_TTL_INSUMOS)) {
+      return res.json(cacheInsumos);
+    }
+
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
@@ -24,8 +36,13 @@ router.get('/', async (req, res) => {
       return obj;
     });
 
-    if (req.query.incluir_inativos !== 'true') {
+    if (!incluirInativos) {
       data = data.filter(item => item.ativo !== 'inativo');
+    }
+
+    if (!incluirInativos) {
+      cacheInsumos = data;
+      cacheInsumosTimestamp = Date.now();
     }
 
     res.json(data);
@@ -56,6 +73,8 @@ router.post('/', async (req, res) => {
       },
     });
 
+    cacheInsumos = null;
+    cacheInsumosTimestamp = null;
     res.status(201).json({ message: 'Insumo cadastrado com sucesso!', id });
   } catch (error) {
     console.error('Erro ao cadastrar insumo:', error);
@@ -95,6 +114,8 @@ router.put('/:id', async (req, res) => {
       },
     });
 
+    cacheInsumos = null;
+    cacheInsumosTimestamp = null;
     res.json({ message: 'Insumo atualizado com sucesso!' });
   } catch (error) {
     console.error('Erro ao atualizar insumo:', error);
@@ -127,6 +148,8 @@ router.patch('/:id/desativar', async (req, res) => {
       requestBody: { values: [[agora]] },
     });
 
+    cacheInsumos = null;
+    cacheInsumosTimestamp = null;
     res.json({ message: 'Insumo desativado com sucesso!' });
   } catch (error) {
     console.error('Erro ao desativar insumo:', error);
@@ -159,6 +182,8 @@ router.patch('/:id/reativar', async (req, res) => {
       requestBody: { values: [[agora]] },
     });
 
+    cacheInsumos = null;
+    cacheInsumosTimestamp = null;
     res.json({ message: 'Insumo reativado com sucesso!' });
   } catch (error) {
     console.error('Erro ao reativar insumo:', error);

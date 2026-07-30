@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import api from "../services/api";
+import { ArrowUpCircle } from 'lucide-react';
 
 export default function EntradaInsumos() {
   const [insumos, setInsumos] = useState([]);
@@ -98,7 +99,7 @@ export default function EntradaInsumos() {
       <Header />
       <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px 16px' }}>
         <div style={{ background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '28px' }}>
-          <h2 style={{ color: 'var(--cor-texto-titulo)', marginTop: 0, marginBottom: '24px' }}>Registrar Entrada de Insumo</h2>
+          <h2 style={{ color: 'var(--cor-texto-titulo)', marginTop: 0, marginBottom: '24px' }}><ArrowUpCircle size={24} /> Registrar Entrada de Insumo</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>
@@ -153,7 +154,11 @@ export default function EntradaInsumos() {
               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--cor-destaque-hover)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'var(--cor-destaque)'}
             >
-              Registrar Entrada
+              {loading ? 'Registrando...' : (
+                <>
+                  <ArrowUpCircle size={18} /> Registrar Entrada
+                </>
+              )}
             </button>
           </form>
         </div>

@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import api from '../services/api';
+import { Package, Building2, Settings2, AlertCircle, Settings } from 'lucide-react';
 
 export default function CadastroGestor() {
   const [insumos, setInsumos] = useState([]);
   const [filiais, setFiliais] = useState([]);
-  const [aba, setAba] = useState('insumos');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const abaDaURL = searchParams.get('aba') || 'insumos';
+  const [aba, setAba] = useState(abaDaURL);
 
   const [formInsumo, setFormInsumo] = useState({ nome: '', unidade: '', estoque_minimo: '', ativo: 'ativo' });
   const [formFilial, setFormFilial] = useState({ nome: '', endereco: '', responsavel: '', ativo: 'ativo' });
@@ -19,6 +24,11 @@ export default function CadastroGestor() {
   const [editandoFilial, setEditandoFilial] = useState(null);
   const [mensagem, setMensagem] = useState('');
   const [ehErro, setEhErro] = useState(false);
+
+  const handleAbaChange = (novaAba) => {
+  setAba(novaAba);
+  navigate(`/gestor?aba=${novaAba}`);
+  };
 
   useEffect(() => {
     api.get('/insumos?incluir_inativos=true').then((res) => setInsumos(res.data));
@@ -176,12 +186,12 @@ export default function CadastroGestor() {
     <>
       <Header />
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px 16px' }}>
-        <h2 style={{ color: 'var(--cor-texto-titulo)' }}>Painel do Gestor</h2>
+        <h2 style={{ color: 'var(--cor-texto-titulo)' }}><Settings size={24} style={{ marginRight: '8px' }} />Painel do Gestor</h2>
 
         <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', marginTop: '16px' }}>
-          <button onClick={() => setAba('insumos')} style={abaStyle(aba === 'insumos')}>Insumos</button>
-          <button onClick={() => setAba('filiais')} style={abaStyle(aba === 'filiais')}>Filiais</button>
-          <button onClick={() => setAba('estoque')} style={abaStyle(aba === 'estoque')}>Estoque Mínimo</button>
+          <button onClick={() => handleAbaChange('insumos')} style={abaStyle(aba === 'insumos')}><Package size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Insumos</button>
+          <button onClick={() => handleAbaChange('filiais')} style={abaStyle(aba === 'filiais')}><Building2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Filiais</button>
+          <button onClick={() => handleAbaChange('estoque')} style={abaStyle(aba === 'estoque')}><Settings2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Estoque Mínimo</button>
         </div>
 
       {mensagem && (
@@ -360,7 +370,7 @@ export default function CadastroGestor() {
                 style={inputStyle}
               />
               <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', marginTop: '-8px' }}>
-                ⚠️ Este valor substitui o estoque mínimo global do insumo para esta filial específica.
+                 <AlertCircle size={14} /> Este valor substitui o estoque mínimo global do insumo para esta filial específica.
               </p>
             </div>
 
