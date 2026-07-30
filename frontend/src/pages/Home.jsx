@@ -351,7 +351,7 @@ export default function Home() {
                 gap: "6px",
               }}
             >
-              <ArrowDownCircle size={18} />
+              <ArrowUpCircle size={18} />
               Registrar Entrada
             </button>
           )}
@@ -373,7 +373,7 @@ export default function Home() {
               gap: "6px",
             }}
           >
-            <ArrowUpCircle size={18} />
+            <ArrowDownCircle size={18} />
             Registrar Saída
           </button>
         </div>
