@@ -2,33 +2,29 @@ const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID } = require('../config/sheets');
 const { parseRows, calcularSaldosComMinimo, getEstoquesMinimos, filtrarPorPerfil } = require('../services/calculos');
-const { getCache, setCache } = require('../services/cache');
+const { getCache, setCache, clearCache } = require('../services/cache');
 
 // Cache em memória
 let cacheSaldos = null;
 let cacheTimestamp = null;
-let cacheVersion = 0; // Versão do cache para controle
-const CACHE_TTL = 30000; // 30 segundos
+let cacheVersion = 0;
+const CACHE_TTL = 30000;
 
 // Função para invalidar cache externamente
 function invalidarCache() {
   cacheVersion++;
-  console.log(`🗑️ Cache de saldos invalidado (versão ${cacheVersion})`);
+  cacheSaldos = null;
+  cacheTimestamp = null;
+  clearCache(); // ← limpa o cache do cache.js
+  console.log(`Cache de saldos invalidado (versão ${cacheVersion})`);
   return cacheVersion;
 }
 
 function invalidarTodosCaches() {
   cacheSaldos = null;
-  cacheSaldosTimestamp = null;
-  cacheMovimentacoes = null;
-  cacheMovimentacoesTimestamp = null;
-  cacheInsumos = null;
-  cacheInsumosTimestamp = null;
-  cacheFiliais = null;
-  cacheFiliaisTimestamp = null;
-  cacheEstoqueMinimo = null;
-  cacheEstoqueMinimoTimestamp = null;
-  console.log('🗑️ Todos os caches invalidados');
+  cacheTimestamp = null;
+  clearCache();
+  console.log('Todos os caches invalidados');
 }
 
 module.exports.invalidarCache = invalidarCache;
@@ -55,11 +51,10 @@ router.get('/', async (req, res) => {
       parseRows(filiaisRes),
       estoquesMinimos
     );
-    setCache( 'saldos', saldos);
+    setCache('saldos', saldos);
 
     cacheSaldos = saldos;
     cacheTimestamp = Date.now();
-
     res.json(filtrarPorPerfil(saldos, req.usuario.filial_id));
   } catch (error) {
     console.error('Erro ao calcular saldos:', error);
@@ -68,3 +63,5 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.invalidarCache = invalidarCache;
+module.exports.invalidarTodosCaches = invalidarTodosCaches;

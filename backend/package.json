@@ -13,14 +13,11 @@
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "chart.js": "^4.4.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "googleapis": "^173.0.0",
-    "jsonwebtoken": "^9.0.3",
-    "lucide-react": "^1.27.0",
-    "react-chartjs-2": "^5.2.0"
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

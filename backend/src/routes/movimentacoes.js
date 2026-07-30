@@ -200,8 +200,8 @@ router.post('/', async (req, res) => {
 
       cacheMovimentacoes = null;
       cacheMovimentacoesTimestamp = null;
+      invalidarCache();
       return res.status(201).json({ message: 'Transferência registrada com sucesso!' });
-      invalidarCacheSaldos();
     }
 
     const id = await getNextId('Movimentacoes');
@@ -216,8 +216,8 @@ router.post('/', async (req, res) => {
 
     cacheMovimentacoes = null;
     cacheMovimentacoesTimestamp = null;
+    invalidarCache();
     res.status(201).json({ message: 'Movimentação registrada com sucesso!' });
-    invalidarCacheSaldos();
   } catch (error) {
     console.error('Erro ao registrar movimentação:', error);
     res.status(500).json({ error: 'Erro ao registrar movimentação' });
