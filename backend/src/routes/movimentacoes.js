@@ -54,10 +54,12 @@ router.get('/', async (req, res) => {
       data = data.filter(m => m.tipo === tipo);
     }
     if (data_inicio) {
-      data = data.filter(m => new Date(m.data) >= new Date(data_inicio));
+      const inicio = new Date(data_inicio + 'T00:00:00');
+      data = data.filter(m => new Date(m.data) >= inicio);
     }
     if (data_fim) {
-      data = data.filter(m => new Date(m.data) <= new Date(data_fim));
+      const fim = new Date(data_fim + 'T23:59:59.999');
+      data = data.filter(m => new Date(m.data) <= fim);
     }
 
     if (!hasFilters) {

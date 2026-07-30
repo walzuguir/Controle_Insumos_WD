@@ -26,8 +26,8 @@ export default function Home() {
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const ehGestor = usuario?.filial_id === "gestor";
   const filiaisParaMostrar = ehGestor
-  ? filiais
-  : filiais.filter(f => f.id === usuario?.filial_id);
+    ? filiais
+    : filiais.filter((f) => f.id === usuario?.filial_id);
 
   useEffect(() => {
     api.get("/filiais").then((res) => setFiliais(res.data));
@@ -272,7 +272,6 @@ export default function Home() {
           })}
         </div>
 
-        {/* ACESSO RÁPIDO - REDUZIDO */}
         <h3 style={{ marginBottom: "16px", color: "var(--cor-texto-titulo)" }}>
           <LayoutDashboard
             size={18}
@@ -288,26 +287,30 @@ export default function Home() {
             marginBottom: "32px",
           }}
         >
-          <button
-            onClick={() => navigate("/gestor?aba=insumos")}
-            style={{
-              padding: "12px 24px",
-              background: "var(--cor-destaque)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <Plus size={18} />
-            Cadastrar Insumo
-          </button>
+          {/* Só gestor vê Cadastrar Insumo */}
+          {ehGestor && (
+            <button
+              onClick={() => navigate("/gestor?aba=insumos")}
+              style={{
+                padding: "12px 24px",
+                background: "var(--cor-destaque)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <Plus size={18} />
+              Cadastrar Insumo
+            </button>
+          )}
 
+          {/* Só gestor vê Cadastrar Filial */}
           {ehGestor && (
             <button
               onClick={() => navigate("/gestor?aba=filiais")}
@@ -330,26 +333,30 @@ export default function Home() {
             </button>
           )}
 
-          <button
-            onClick={() => navigate("/entrada")}
-            style={{
-              padding: "12px 24px",
-              background: "var(--cor-sucesso)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <ArrowDownCircle size={18} />
-            Registrar Entrada
-          </button>
+          {/* Só gestor vê Registrar Entrada */}
+          {ehGestor && (
+            <button
+              onClick={() => navigate("/entrada")}
+              style={{
+                padding: "12px 24px",
+                background: "var(--cor-sucesso)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <ArrowDownCircle size={18} />
+              Registrar Entrada
+            </button>
+          )}
 
+          {/* Registrar Saída – visível para todos os perfis */}
           <button
             onClick={() => navigate("/saida")}
             style={{
@@ -371,7 +378,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* ÚLTIMAS MOVIMENTAÇÕES - mantido */}
         <h3 style={{ marginBottom: "16px", color: "var(--cor-texto-titulo)" }}>
           <Clock
             size={18}

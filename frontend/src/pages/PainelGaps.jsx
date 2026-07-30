@@ -35,7 +35,7 @@ export default function PainelGaps() {
   const totalConsumo = Object.values(consumoPorFilial).reduce((a, b) => a + b, 0);
   const mediaConsumo = totalFiliais > 0 ? totalConsumo / totalFiliais : 0;
   const filiaisAnomelas = Object.entries(consumoPorFilial)
-    .filter(([, qtd]) => qtd > mediaConsumo * 2)
+    .filter(([id, qtd]) => id !== '1' && qtd > mediaConsumo * 2)
     .map(([filial_id, qtd]) => {
       const filial = filiais.find(f => f.id === filial_id);
       return { filial_nome: filial ? filial.nome : filial_id, consumo: qtd, media: mediaConsumo };
