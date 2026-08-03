@@ -93,21 +93,6 @@ router.post('/', async (req, res) => {
       return res.status(403).json({ error: 'Apenas o gestor pode registrar transferências' });
     }
 
-    if (tipo === 'entrada') {
-      filial_origem_final = 'fornecedor';
-
-      if (ehGestor && filial_destino) {
-        destino = filial_destino;
-        if (!existeAtivo(filiaisRes, destino)) {
-          return res.status(400).json({ error: 'Filial de destino não encontrada ou inativa' });
-        }
-      } else if (!ehGestor) {
-        destino = req.usuario.filial_id;
-      } else {
-        return res.status(400).json({ error: 'Filial destino não informada' });
-      }
-    }
-
     const qtd = Number(quantidade);
     if (!Number.isInteger(qtd) || qtd <= 0) {
       return res.status(400).json({ error: 'Quantidade deve ser um número inteiro maior que zero' });
@@ -132,6 +117,21 @@ router.post('/', async (req, res) => {
 
     if (!existeAtivo(insumosRes, insumo_id)) {
       return res.status(400).json({ error: 'Insumo não encontrado ou inativo' });
+    }
+
+    if (tipo === 'entrada') {
+      filial_origem_final = 'fornecedor';
+
+      if (ehGestor && filial_destino) {
+        destino = filial_destino;
+        if (!existeAtivo(filiaisRes, destino)) {
+          return res.status(400).json({ error: 'Filial de destino não encontrada ou inativa' });
+        }
+      } else if (!ehGestor) {
+        destino = req.usuario.filial_id;
+      } else {
+        return res.status(400).json({ error: 'Filial destino não informada' });
+      }
     }
 
     if (tipo === 'saida') {

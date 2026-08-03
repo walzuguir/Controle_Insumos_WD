@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'; import api from '../services/api';
 import Header from '../components/Header';
 import { ArrowDownCircle, AlertTriangle } from 'lucide-react';
+import SeletorInsumo from '../components/SeletorInsumo';
 
 export default function SaidaInsumos() {
   const [insumos, setInsumos] = useState([]);
@@ -150,12 +151,7 @@ export default function SaidaInsumos() {
 
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>
-              <select name="insumo_id" id="insumo_id" value={form.insumo_id} onChange={handleChange} style={inputStyle}>
-                <option value="">Selecione...</option>
-                {insumos.map((i) => (
-                  <option key={i.id} value={i.id}>{i.nome}</option>
-                ))}
-              </select>
+              <SeletorInsumo insumos={insumos} valor={form.insumo_id} onChange={(value) => setForm({ ...form, insumo_id: value })} />
             </div>
 
             <div style={{ marginBottom: '16px' }}>

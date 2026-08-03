@@ -20,6 +20,7 @@ import {
   TrendingUp,
   AlertCircle,
 } from "lucide-react";
+import SeletorInsumo from "../components/SeletorInsumo";
 
 ChartJS.register(
   CategoryScale,
@@ -288,19 +289,12 @@ export default function Relatorio() {
             </select>
           )}
 
-          <select
-            name="insumo_id"
-            value={filtros.insumo_id}
-            onChange={handleFiltro}
-            style={filterStyle}
-          >
-            <option value="">Todos os insumos</option>
-            {insumos.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.nome}
-              </option>
-            ))}
-          </select>
+          <SeletorInsumo
+            insumos={insumos}
+            valor={filtros.insumo_id}
+            onChange={(id) => setFiltros({ ...filtros, insumo_id: id })}
+            placeholder="Todos os insumos"
+          />
 
           <select
             name="tipo"
@@ -497,70 +491,70 @@ export default function Relatorio() {
         {movimentacoes.filter(
           (m) => m.tipo === "saida" && m.filial_destino === "",
         ).length > 0 && (
-          <div
-            style={{
-              marginBottom: "32px",
-              background: "var(--cor-superficie)",
-              borderRadius: "12px",
-              padding: "24px",
-              border: "1px solid var(--cor-borda)",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-            }}
-          >
-            <h3
+            <div
               style={{
-                marginBottom: "16px",
-                color: "var(--cor-texto-titulo)",
-                fontSize: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
+                marginBottom: "32px",
+                background: "var(--cor-superficie)",
+                borderRadius: "12px",
+                padding: "24px",
+                border: "1px solid var(--cor-borda)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
               }}
             >
-              <BarChart3 size={18} />
-              Top 10 Consumo por Insumo
-            </h3>
-            <div style={{ height: "320px" }}>
-              {" "}
-              {/* ← altura fixa e maior */}
-              <Bar
-                data={getDadosGrafico()}
-                options={{
-                  indexAxis: "y", // ← barras HORIZONTAIS!
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (context) => `${context.parsed.x} unidades`,
-                      },
-                    },
-                  },
-                  scales: {
-                    x: {
-                      beginAtZero: true,
-                      ticks: { stepSize: 1 },
-                      grid: { display: false },
-                    },
-                    y: {
-                      grid: { display: false },
-                      ticks: {
-                        font: { size: 12 },
-                      },
-                    },
-                  },
-                  layout: {
-                    padding: {
-                      left: 0,
-                      right: 10,
-                    },
-                  },
+              <h3
+                style={{
+                  marginBottom: "16px",
+                  color: "var(--cor-texto-titulo)",
+                  fontSize: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
                 }}
-              />
+              >
+                <BarChart3 size={18} />
+                Top 10 Consumo por Insumo
+              </h3>
+              <div style={{ height: "320px" }}>
+                {" "}
+                {/* ← altura fixa e maior */}
+                <Bar
+                  data={getDadosGrafico()}
+                  options={{
+                    indexAxis: "y", // ← barras HORIZONTAIS!
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => `${context.parsed.x} unidades`,
+                        },
+                      },
+                    },
+                    scales: {
+                      x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { display: false },
+                      },
+                      y: {
+                        grid: { display: false },
+                        ticks: {
+                          font: { size: 12 },
+                        },
+                      },
+                    },
+                    layout: {
+                      padding: {
+                        left: 0,
+                        right: 10,
+                      },
+                    },
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Tabela */}
         {loading && (
