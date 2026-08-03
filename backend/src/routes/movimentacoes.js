@@ -81,6 +81,9 @@ router.post('/', async (req, res) => {
     const ehGestor = req.usuario.filial_id === 'gestor';
     const responsavel_id = req.usuario.id;
 
+    let filial_origem_final = 'fornecedor';
+    let destino = '';
+
     const tiposValidos = ['entrada', 'saida', 'transferencia'];
     if (!tiposValidos.includes(tipo)) {
       return res.status(400).json({ error: 'Tipo de movimentação inválido' });
@@ -90,8 +93,19 @@ router.post('/', async (req, res) => {
       return res.status(403).json({ error: 'Apenas o gestor pode registrar transferências' });
     }
 
-    if (tipo === 'entrada' && !ehGestor) {
-      return res.status(403).json({ error: 'Apenas o gestor pode registrar entrada de insumos' });
+    if (tipo === 'entrada') {
+      filial_origem_final = 'fornecedor';
+
+      if (ehGestor && filial_destino) {
+        destino = filial_destino;
+        if (!existeAtivo(filiaisRes, destino)) {
+          return res.status(400).json({ error: 'Filial de destino não encontrada ou inativa' });
+        }
+      } else if (!ehGestor) {
+        destino = req.usuario.filial_id;
+      } else {
+        return res.status(400).json({ error: 'Filial destino não informada' });
+      }
     }
 
     const qtd = Number(quantidade);
@@ -118,23 +132,6 @@ router.post('/', async (req, res) => {
 
     if (!existeAtivo(insumosRes, insumo_id)) {
       return res.status(400).json({ error: 'Insumo não encontrado ou inativo' });
-    }
-
-    let filial_origem_final = 'fornecedor';
-    let destino = '';
-
-    if (tipo === 'entrada') {
-      filial_origem_final = 'fornecedor';
-
-      if (ehGestor && filial_destino) {
-        destino = filial_destino;
-
-        if (!existeAtivo(filiaisRes, destino)) {
-          return res.status(400).json({ error: 'Filial de destino não encontrada ou inativa' });
-        }
-      } else {
-        return res.status(400).json({ error: 'Filial destino não informada' });
-      }
     }
 
     if (tipo === 'saida') {

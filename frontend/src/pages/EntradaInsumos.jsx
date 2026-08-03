@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import api from "../services/api";
 import { ArrowUpCircle } from 'lucide-react';
@@ -21,14 +20,7 @@ export default function EntradaInsumos() {
   const [ehErro, setEhErro] = useState(false);
   const [loading, setLoading] = useState(false);
   const usuario = JSON.parse(localStorage.getItem("usuario"));
-  const navigate = useNavigate();
   const ehGestor = usuario?.filial_id === 'gestor';
-
-  useEffect(() => {
-    if (!ehGestor) {
-      navigate('/home');
-    }
-  }, [ehGestor, navigate]);
 
   useEffect(() => {
     api.get("/insumos").then((res) => setInsumos(res.data));
@@ -54,13 +46,6 @@ export default function EntradaInsumos() {
       return;
     }
 
-    if (ehGestor && !form.filial_destino) {
-      setMensagem("Selecione a filial de destino.");
-      setEhErro(true);
-      setLoading(false);
-      return;
-    }
-
     try {
       const payload = {
         tipo: "entrada",
@@ -71,10 +56,22 @@ export default function EntradaInsumos() {
       };
 
       if (ehGestor) {
+        // Gestor: precisa selecionar a filial destino
+        if (!form.filial_destino) {
+          setMensagem("Selecione a filial de destino.");
+          setEhErro(true);
+          setLoading(false);
+          return;
+        }
         payload.filial_destino = form.filial_destino;
+      } else {
+        // ✅ Responsável: usa a filial do usuário
+        payload.filial_destino = usuario?.filial_id; // ← USANDO usuario (já definido)
+        console.log('✅ Responsável: filial_destino =', payload.filial_destino);
       }
 
-      await api.post("/movimentacoes", payload);
+      const response = await api.post("/movimentacoes", payload);
+      console.log('✅ Resposta:', response.data);
 
       setMensagem("Entrada registrada com sucesso!");
       setEhErro(false);
@@ -123,7 +120,6 @@ export default function EntradaInsumos() {
                   value={form.filial_destino}
                   onChange={handleChange}
                   style={inputStyle}
-                  required
                 >
                   <option value="">Selecione a filial...</option>
                   {filiais.map((f) => (

@@ -25,9 +25,7 @@ export default function Header() {
   const menuLinks = [
     { nome: "Início", rota: "/home", icone: Home },
     { nome: "Dashboard", rota: dashboardUrl, icone: LayoutDashboard },
-    ...(ehGestor
-      ? [{ nome: "Entrada", rota: "/entrada", icone: ArrowUpCircle }] //
-      : []),
+    { nome: "Entrada", rota: "/entrada", icone: ArrowUpCircle },
     { nome: "Saída", rota: "/saida", icone: ArrowDownCircle },
     { nome: "Relatório", rota: "/relatorio", icone: BarChart3 },
   ];

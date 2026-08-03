@@ -337,8 +337,6 @@ export default function Home() {
             </button>
           )}
 
-          {/* Só gestor vê Registrar Entrada */}
-          {ehGestor && (
             <button
               onClick={() => navigate("/entrada")}
               style={{
@@ -358,9 +356,7 @@ export default function Home() {
               <ArrowUpCircle size={18} />
               Registrar Entrada
             </button>
-          )}
 
-          {/* Registrar Saída – visível para todos os perfis */}
           <button
             onClick={() => navigate("/saida")}
             style={{
