@@ -15,6 +15,7 @@ export default function EntradaInsumos() {
     origem: "Fornecedor",
     filial_destino: "",
     observacao: "",
+    requisitante: "",
   });
   const [mensagem, setMensagem] = useState("");
   const [ehErro, setEhErro] = useState(false);
@@ -66,6 +67,7 @@ export default function EntradaInsumos() {
         insumo_id: form.insumo_id,
         quantidade: form.quantidade,
         nota_fiscal: form.nota_fiscal || "",
+        requisitante: form.requisitante || "",
       };
 
       if (ehGestor) {
@@ -82,6 +84,7 @@ export default function EntradaInsumos() {
         nota_fiscal: "",
         filial_destino: "",
         observacao: "",
+        requisitante: "",
       });
     } catch (error) {
       setMensagem(error.response?.data?.error || "Erro ao registrar entrada.");
@@ -140,6 +143,10 @@ export default function EntradaInsumos() {
             <div style={{ marginBottom: '20px' }}>
               <label htmlFor="nota_fiscal" style={labelStyle}>Nota Fiscal (opcional)</label>
               <input type="text" name="nota_fiscal" id="nota_fiscal" value={form.nota_fiscal} onChange={handleChange} placeholder="Ex: 000123456" style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="requisitante" style={labelStyle}>Requisitante (opcional)</label>
+              <input type="text" name="requisitante" id="requisitante" value={form.requisitante} onChange={handleChange} placeholder="Nome do requisitante" style={inputStyle} />
             </div>
 
             {mensagem && (

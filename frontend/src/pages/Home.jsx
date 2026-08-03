@@ -47,6 +47,10 @@ export default function Home() {
     return filial ? filial.nome : "Fornecedor";
   };
 
+  const nomeUnidade = (id) => {
+    const insumo = insumos.find((i) => i.id === id);
+    return insumo ? insumo.unidade : "Unidade não encontrada";
+  }
   const ultimasMovimentacoes = [...movimentacoes].reverse().slice(0, 5);
 
   const atalhos = [
@@ -422,6 +426,17 @@ export default function Home() {
                     fontSize: "13px",
                   }}
                 >
+                  Unidade
+                </th>
+                <th
+                  style={{
+                    padding: "10px",
+                    textAlign: "left",
+                    border: "1px solid var(--cor-borda)",
+                    color: "var(--cor-texto-suave)",
+                    fontSize: "13px",
+                  }}
+                >
                   Tipo
                 </th>
                 <th
@@ -445,6 +460,17 @@ export default function Home() {
                   }}
                 >
                   Destino
+                </th>
+                <th
+                  style={{
+                    padding: "10px",
+                    textAlign: "left",
+                    border: "1px solid var(--cor-borda)",
+                    color: "var(--cor-texto-suave)",
+                    fontSize: "13px",
+                  }}
+                >
+                  Requisitante
                 </th>
                 <th
                   style={{
@@ -482,6 +508,14 @@ export default function Home() {
                     style={{
                       padding: "10px",
                       border: "1px solid var(--cor-borda)",
+                    }}
+                  >
+                    {nomeUnidade(m.insumo_id)}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px",
+                      border: "1px solid var(--cor-borda)",
                       color:
                         m.tipo === "entrada"
                           ? "var(--cor-sucesso)"
@@ -507,6 +541,14 @@ export default function Home() {
                     {m.tipo === "saida" && m.filial_destino === ""
                       ? "Consumo"
                       : nomeFilial(m.filial_destino)}
+                  </td>
+                  <td
+                    style={{
+                      padding: "10px",
+                      border: "1px solid var(--cor-borda)",
+                    }}
+                  >
+                    {m.requisitante || "—"}
                   </td>
                   <td
                     style={{

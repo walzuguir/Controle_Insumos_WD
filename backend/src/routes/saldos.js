@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     const sheets = await getSheets();
 
     const [movimentacoesRes, insumosRes, filiaisRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Movimentacoes!A:K' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Movimentacoes!A:L' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Insumos!A:G' }),
       sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Filiais!A:G' }),
     ]);

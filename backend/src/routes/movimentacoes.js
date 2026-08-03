@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
     const sheets = await getSheets();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Movimentacoes!A:K',
+      range: 'Movimentacoes!A:L',
     });
 
     const rows = response.data.values;
@@ -76,7 +76,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { tipo, insumo_id, filial_destino, quantidade, nota_fiscal, filial_origem } = req.body;
+    const { tipo, insumo_id, filial_destino, quantidade, nota_fiscal, filial_origem, requisitante } = req.body;
 
     const ehGestor = req.usuario.filial_id === 'gestor';
     const responsavel_id = req.usuario.id;
@@ -182,20 +182,20 @@ router.post('/', async (req, res) => {
       const idSaida = await getNextId('Movimentacoes');
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Movimentacoes!A:K',
+        range: 'Movimentacoes!A:L',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [[idSaida, agora, 'saida', insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, '']],
+          values: [[idSaida, agora, 'saida', insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, '', requisitante || '']],
         },
       });
 
       const idEntrada = await getNextId('Movimentacoes');
       await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Movimentacoes!A:K',
+        range: 'Movimentacoes!A:L',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [[idEntrada, agora, 'entrada', insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, '']],
+          values: [[idEntrada, agora, 'entrada', insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, '', requisitante || '']],
         },
       });
 
@@ -209,10 +209,10 @@ router.post('/', async (req, res) => {
     const id = await getNextId('Movimentacoes');
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Movimentacoes!A:K',
+      range: 'Movimentacoes!A:L',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[id, agora, tipo, insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, nota_fiscal || '']],
+        values: [[id, agora, tipo, insumo_id, filial_origem_final, destino, qtd, responsavel_id, agora, agora, nota_fiscal || '', requisitante || '']],
       },
     });
 

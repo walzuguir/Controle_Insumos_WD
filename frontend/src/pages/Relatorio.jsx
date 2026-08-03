@@ -134,6 +134,7 @@ export default function Relatorio() {
 
   const nomeFilia = (id) => filiais.find((f) => f.id === id)?.nome || id;
   const nomeInsumo = (id) => insumos.find((i) => i.id === id)?.nome || id;
+  const nomeUnidade = (id) => insumos.find((i) => i.id === id)?.unidade || "";
   const nomeResponsavel = (id) => usuarios.find((u) => u.id === id)?.nome || id;
 
   const getDadosGrafico = () => {
@@ -171,8 +172,10 @@ export default function Relatorio() {
       "Data",
       "Tipo",
       "Insumo",
+      "Unidade",
       "Origem",
       "Destino",
+      "Requisitante",
       "Quantidade",
       "Nota Fiscal",
       "Responsável",
@@ -192,10 +195,12 @@ export default function Relatorio() {
         new Date(m.data).toLocaleString("pt-BR"),
         m.tipo,
         nomeInsumo(m.insumo_id),
+        nomeUnidade(m.insumo_id),
         nomeFilia(m.filial_origem),
         m.tipo === "saida" && m.filial_destino === ""
           ? "Consumo"
           : nomeFilia(m.filial_destino),
+        m.requisitante || "",
         m.quantidade,
         m.nota_fiscal || "",
         nomeResponsavel(m.responsavel_id),
@@ -228,7 +233,7 @@ export default function Relatorio() {
     fontSize: "13px",
     fontWeight: "500",
   };
-  const tdStyle = { padding: "10px", border: "1px solid var(--cor-borda)" };
+  const tdStyle = { padding: "10px", border: "1px solid var(--cor-borda)", fontSize: "14px" };
   const cardStyle = {
     padding: "16px 20px",
     background: "var(--cor-superficie)",
@@ -568,14 +573,16 @@ export default function Relatorio() {
             WebkitOverflowScrolling: "touch",
           }}
         >
-          <table style={{ minWidth: "800px", borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--cor-superficie-2)" }}>
                 <th style={thStyle}>Data</th>
                 <th style={thStyle}>Tipo</th>
                 <th style={thStyle}>Insumo</th>
+                <th style={thStyle}>Unidade</th>
                 <th style={thStyle}>Origem</th>
                 <th style={thStyle}>Destino</th>
+                <th style={thStyle}>Requisitante</th>
                 <th style={thStyle}>Qtd</th>
                 <th style={thStyle}>NF</th>
                 <th style={thStyle}>Responsável</th>
@@ -585,7 +592,7 @@ export default function Relatorio() {
               {movimentacoes.length === 0 && !loading && (
                 <tr>
                   <td
-                    colSpan="8"
+                    colSpan="10"
                     style={{
                       padding: "16px",
                       textAlign: "center",
@@ -640,10 +647,12 @@ export default function Relatorio() {
                       )}
                     </td>
                     <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
+                    <td style={tdStyle}>{nomeUnidade(m.insumo_id)}</td>
                     <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
                     <td style={tdStyle}>
                       {isConsumo ? "Consumo" : nomeFilia(m.filial_destino)}
                     </td>
+                    <td style={tdStyle}>{m.requisitante || "—"}</td>
                     <td style={tdStyle}>{m.quantidade}</td>
                     <td style={tdStyle}>{m.nota_fiscal || "—"}</td>
                     <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>

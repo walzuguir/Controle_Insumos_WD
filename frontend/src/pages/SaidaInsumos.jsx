@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';import api from '../services/api';
+import { useState, useEffect, useMemo } from 'react'; import api from '../services/api';
 import Header from '../components/Header';
 import { ArrowDownCircle, AlertTriangle } from 'lucide-react';
 
@@ -10,6 +10,7 @@ export default function SaidaInsumos() {
     insumo_id: '',
     quantidade: '',
     filial_destino: '',
+    requisitante: '',
   });
   const [mensagem, setMensagem] = useState('');
   const [ehErro, setEhErro] = useState(false);
@@ -26,15 +27,15 @@ export default function SaidaInsumos() {
   }, []);
 
   const saldoDisponivel = useMemo(() => {
-  if (form.insumo_id && (ehGestor ? form.filial_origem : usuario?.filial_id)) {
-    const filialId = ehGestor ? form.filial_origem : usuario?.filial_id;
-    const saldo = saldos.find(s =>
-      s.insumo_id === form.insumo_id && s.filial_id === filialId
-    );
-    return saldo ? saldo.saldo : 0;
-  }
-  return null;
-}, [form.insumo_id, form.filial_origem, saldos, ehGestor, usuario?.filial_id]);
+    if (form.insumo_id && (ehGestor ? form.filial_origem : usuario?.filial_id)) {
+      const filialId = ehGestor ? form.filial_origem : usuario?.filial_id;
+      const saldo = saldos.find(s =>
+        s.insumo_id === form.insumo_id && s.filial_id === filialId
+      );
+      return saldo ? saldo.saldo : 0;
+    }
+    return null;
+  }, [form.insumo_id, form.filial_origem, saldos, ehGestor, usuario?.filial_id]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -79,6 +80,7 @@ export default function SaidaInsumos() {
         tipo: form.tipo,
         insumo_id: form.insumo_id,
         quantidade: form.quantidade,
+        requisitante: form.requisitante || ''
       };
 
       if (ehGestor) {
@@ -97,7 +99,8 @@ export default function SaidaInsumos() {
         insumo_id: '',
         quantidade: '',
         filial_origem: '',
-        filial_destino: ''
+        filial_destino: '',
+        requisitante: '',
       });
       const saldosAtualizados = await api.get('/saldos');
       setSaldos(saldosAtualizados.data);
@@ -169,7 +172,7 @@ export default function SaidaInsumos() {
                 fontSize: '13px',
                 color: saldoDisponivel < parseFloat(form.quantidade || 0) ? 'var(--cor-perigo)' : 'var(--cor-sucesso)'
               }}>
-                  <AlertTriangle size={16} /> Saldo disponível: <strong>{saldoDisponivel}</strong> unidades
+                <AlertTriangle size={16} /> Saldo disponível: <strong>{saldoDisponivel}</strong> unidades
               </div>
             )}
 
@@ -184,6 +187,19 @@ export default function SaidaInsumos() {
                 </select>
               </div>
             )}
+
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="requisitante" style={labelStyle}>Requisitante</label>
+              <input
+                type="text"
+                name="requisitante"
+                id="requisitante"
+                value={form.requisitante || ''}
+                onChange={handleChange}
+                placeholder="Nome do requisitante (opcional)"
+                style={inputStyle}
+              />
+            </div>
 
             {mensagem && (
               <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
@@ -213,7 +229,7 @@ export default function SaidaInsumos() {
                 transition: 'background 0.2s'
               }}
             >
-              {loading ? 'Registrando...' :(
+              {loading ? 'Registrando...' : (
                 <>
                   <ArrowDownCircle size={18} /> Registrar Saída
                 </>
