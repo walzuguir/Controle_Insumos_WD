@@ -54,16 +54,22 @@ export default function Relatorio() {
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const ehGestor = usuario?.filial_id === "gestor";
 
+  const classificarMovimento = (m) => {
+    if (m.tipo === "entrada") return "entrada";
+    if (m.tipo === "saida" && m.filial_destino === "") return "consumo";
+    return "transferencia"; // saida com destino, ou tipo === transferencia
+  };
+
   const calcularResumo = useCallback((dados) => {
     const consumo = dados
-      .filter((m) => m.tipo === "saida" && m.filial_destino === "")
+      .filter((m) => classificarMovimento(m) === "consumo")
       .reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
 
     const transferencia = dados
       .filter(
         (m) =>
           m.tipo === "transferencia" ||
-          (m.tipo === "saida" && m.filial_destino !== ""),
+          (classificarMovimento(m) === "consumo"),
       )
       .reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
 
@@ -139,32 +145,35 @@ export default function Relatorio() {
   const nomeResponsavel = (id) => usuarios.find((u) => u.id === id)?.nome || id;
 
   const getDadosGrafico = () => {
-    const consumoPorInsumo = {};
+    const categoriaAtual = filtros.origem || "consumo"; // padrão: mantém comportamento atual
+
+    const agregado = {};
     movimentacoes
-      .filter((m) => m.tipo === "saida" && m.filial_destino === "") // ← consumo real
+      .filter((m) => classificarMovimento(m) === categoriaAtual)
       .forEach((m) => {
         const nome = nomeInsumo(m.insumo_id);
-        consumoPorInsumo[nome] =
-          (consumoPorInsumo[nome] || 0) + parseFloat(m.quantidade || 0);
+        agregado[nome] = (agregado[nome] || 0) + parseFloat(m.quantidade || 0);
       });
 
-    // Ordena do maior para o menor e pega os 10 primeiros
-    const sorted = Object.entries(consumoPorInsumo)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
+    const sorted = Object.entries(agregado).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const titulos = {
+      consumo: { label: "Consumo (unidades)", cor: "220, 38, 38" },
+      transferencia: { label: "Transferências (unidades)", cor: "245, 158, 11" },
+      entrada: { label: "Entradas (unidades)", cor: "34, 197, 94" },
+    };
+    const { label, cor } = titulos[categoriaAtual];
 
     return {
       labels: sorted.map(([nome]) => nome),
-      datasets: [
-        {
-          label: "Consumo (unidades)",
-          data: sorted.map(([, qtd]) => qtd),
-          backgroundColor: "rgba(220, 38, 38, 0.6)",
-          borderColor: "rgba(220, 38, 38, 1)",
-          borderWidth: 1,
-          borderRadius: 4,
-        },
-      ],
+      datasets: [{
+        label,
+        data: sorted.map(([, qtd]) => qtd),
+        backgroundColor: `rgba(${cor}, 0.6)`,
+        borderColor: `rgba(${cor}, 1)`,
+        borderWidth: 1,
+        borderRadius: 4,
+      }],
     };
   };
 
@@ -314,8 +323,9 @@ export default function Relatorio() {
             style={filterStyle}
           >
             <option value="">Todas as movimentações</option>
-            <option value="consumo">📊 Apenas Consumo</option>
-            <option value="transferencia">🔄 Apenas Transferências</option>
+            <option value="consumo">Apenas Consumo</option>
+            <option value="transferencia">Apenas Transferências</option>
+            <option value="entrada">Apenas Entradas</option>
           </select>
 
           <input
@@ -488,73 +498,71 @@ export default function Relatorio() {
           </div>
         </div>
 
-        {movimentacoes.filter(
-          (m) => m.tipo === "saida" && m.filial_destino === "",
-        ).length > 0 && (
-            <div
+        {movimentacoes.filter((m) => classificarMovimento(m) === (filtros.origem || "consumo")).length > 0 && (
+          <div
+            style={{
+              marginBottom: "32px",
+              background: "var(--cor-superficie)",
+              borderRadius: "12px",
+              padding: "24px",
+              border: "1px solid var(--cor-borda)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            }}
+          >
+            <h3
               style={{
-                marginBottom: "32px",
-                background: "var(--cor-superficie)",
-                borderRadius: "12px",
-                padding: "24px",
-                border: "1px solid var(--cor-borda)",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                marginBottom: "16px",
+                color: "var(--cor-texto-titulo)",
+                fontSize: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
               }}
             >
-              <h3
-                style={{
-                  marginBottom: "16px",
-                  color: "var(--cor-texto-titulo)",
-                  fontSize: "16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
+              <BarChart3 size={18} />
+              Top 10 {{ consumo: "Consumo", transferencia: "Transferências", entrada: "Entradas" }[filtros.origem || "consumo"]} por Insumo
+            </h3>
+            <div style={{ height: "320px" }}>
+              {" "}
+              {/* ← altura fixa e maior */}
+              <Bar
+                data={getDadosGrafico()}
+                options={{
+                  indexAxis: "y", // ← barras HORIZONTAIS!
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => `${context.parsed.x} unidades`,
+                      },
+                    },
+                  },
+                  scales: {
+                    x: {
+                      beginAtZero: true,
+                      ticks: { stepSize: 1 },
+                      grid: { display: false },
+                    },
+                    y: {
+                      grid: { display: false },
+                      ticks: {
+                        font: { size: 12 },
+                      },
+                    },
+                  },
+                  layout: {
+                    padding: {
+                      left: 0,
+                      right: 10,
+                    },
+                  },
                 }}
-              >
-                <BarChart3 size={18} />
-                Top 10 Consumo por Insumo
-              </h3>
-              <div style={{ height: "320px" }}>
-                {" "}
-                {/* ← altura fixa e maior */}
-                <Bar
-                  data={getDadosGrafico()}
-                  options={{
-                    indexAxis: "y", // ← barras HORIZONTAIS!
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => `${context.parsed.x} unidades`,
-                        },
-                      },
-                    },
-                    scales: {
-                      x: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 },
-                        grid: { display: false },
-                      },
-                      y: {
-                        grid: { display: false },
-                        ticks: {
-                          font: { size: 12 },
-                        },
-                      },
-                    },
-                    layout: {
-                      padding: {
-                        left: 0,
-                        right: 10,
-                      },
-                    },
-                  }}
-                />
-              </div>
+              />
             </div>
-          )}
+          </div>
+        )}
 
         {/* Tabela */}
         {loading && (
@@ -602,7 +610,7 @@ export default function Relatorio() {
                 </tr>
               )}
               {movimentacoes.map((m) => {
-                const isConsumo = m.tipo === "saida" && m.filial_destino === "";
+                const isConsumo = classificarMovimento(m) === "consumo";
                 return (
                   <tr
                     key={m.id}
