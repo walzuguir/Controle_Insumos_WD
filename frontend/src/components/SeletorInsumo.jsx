@@ -6,6 +6,8 @@ const estilosTema = {
     background: 'var(--cor-superficie-2)',
     borderColor: state.isFocused ? 'var(--cor-destaque)' : 'var(--cor-borda)',
     boxShadow: 'none',
+    minWidth: '200px',
+    width: '100%',
     '&:hover': { borderColor: 'var(--cor-destaque)' },
   }),
   singleValue: (base) => ({ ...base, color: 'var(--cor-texto)' }),
