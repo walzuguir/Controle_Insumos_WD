@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import api from '../services/api';
 import { Package, Building2, Settings2, AlertCircle, Settings } from 'lucide-react';
+import SeletorInsumo from '../components/SeletorInsumo';
 
 export default function CadastroGestor() {
   const [insumos, setInsumos] = useState([]);
@@ -26,8 +27,8 @@ export default function CadastroGestor() {
   const [ehErro, setEhErro] = useState(false);
 
   const handleAbaChange = (novaAba) => {
-  setAba(novaAba);
-  navigate(`/gestor?aba=${novaAba}`);
+    setAba(novaAba);
+    navigate(`/gestor?aba=${novaAba}`);
   };
 
   useEffect(() => {
@@ -194,257 +195,250 @@ export default function CadastroGestor() {
           <button onClick={() => handleAbaChange('estoque')} style={abaStyle(aba === 'estoque')}><Settings2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Estoque Mínimo</button>
         </div>
 
-      {mensagem && (
-        <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', marginBottom: '16px', fontSize: '14px' }}>
-          {mensagem}
-        </p>
-      )}
+        {mensagem && (
+          <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', marginBottom: '16px', fontSize: '14px' }}>
+            {mensagem}
+          </p>
+        )}
 
-      {aba === 'insumos' && (
-        <div>
-          <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>{editandoInsumo ? 'Editar Insumo' : 'Cadastrar Insumo'}</h3>
-          <form onSubmit={handleSubmitInsumo} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
-            <label htmlFor="nome_insumo" style={labelStyle}>Nome do insumo</label>
-            <input id="nome_insumo" placeholder="Ex: Papel A4" value={formInsumo.nome} onChange={(e) => setFormInsumo({ ...formInsumo, nome: e.target.value })} required style={inputStyle} />
+        {aba === 'insumos' && (
+          <div>
+            <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>{editandoInsumo ? 'Editar Insumo' : 'Cadastrar Insumo'}</h3>
+            <form onSubmit={handleSubmitInsumo} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
+              <label htmlFor="nome_insumo" style={labelStyle}>Nome do insumo</label>
+              <input id="nome_insumo" placeholder="Ex: Papel A4" value={formInsumo.nome} onChange={(e) => setFormInsumo({ ...formInsumo, nome: e.target.value })} required style={inputStyle} />
 
-            <label htmlFor="unidade" style={labelStyle}>Unidade</label>
-            <input id="unidade" placeholder="Ex: Resma, Caixa, Litro" value={formInsumo.unidade} onChange={(e) => setFormInsumo({ ...formInsumo, unidade: e.target.value })} required style={inputStyle} />
+              <label htmlFor="unidade" style={labelStyle}>Unidade</label>
+              <input id="unidade" placeholder="Ex: Resma, Caixa, Litro" value={formInsumo.unidade} onChange={(e) => setFormInsumo({ ...formInsumo, unidade: e.target.value })} required style={inputStyle} />
 
-            <label htmlFor="estoque_minimo" style={labelStyle}>Estoque mínimo</label>
-            <input id="estoque_minimo" placeholder="Ex: 10" type="number" value={formInsumo.estoque_minimo} onChange={(e) => setFormInsumo({ ...formInsumo, estoque_minimo: e.target.value })} required style={inputStyle} />
+              <label htmlFor="estoque_minimo" style={labelStyle}>Estoque mínimo</label>
+              <input id="estoque_minimo" placeholder="Ex: 10" type="number" value={formInsumo.estoque_minimo} onChange={(e) => setFormInsumo({ ...formInsumo, estoque_minimo: e.target.value })} required style={inputStyle} />
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="submit" style={btnPrimario}>
-                {editandoInsumo ? 'Salvar alterações' : 'Cadastrar'}
-              </button>
-              {editandoInsumo && (
-                <button type="button" onClick={cancelarEdicaoInsumo} style={btnSecundario}>Cancelar</button>
-              )}
-            </div>
-          </form>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="submit" style={btnPrimario}>
+                  {editandoInsumo ? 'Salvar alterações' : 'Cadastrar'}
+                </button>
+                {editandoInsumo && (
+                  <button type="button" onClick={cancelarEdicaoInsumo} style={btnSecundario}>Cancelar</button>
+                )}
+              </div>
+            </form>
 
-          <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>Insumos cadastrados</h3>
-          <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-            <table style={{ width: '100%', minWidth: '520px', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'var(--cor-superficie-2)' }}>
-                  <th style={thStyle}>Nome</th>
-                  <th style={thStyle}>Unidade</th>
-                  <th style={thStyle}>Estoque mínimo</th>
-                  <th style={thStyle}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {insumos.map((i) => (
-                  <tr key={i.id} style={{ opacity: i.ativo === 'inativo' ? 0.5 : 1 }}>
-                    <td style={tdStyle}>
-                      {i.nome}
-                      {i.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--cor-perigo)' }}>(inativo)</span>}
-                    </td>
-                    <td style={tdStyle}>{i.unidade}</td>
-                    <td style={tdStyle}>{i.estoque_minimo}</td>
-                    <td style={tdStyle}>
-                      <button onClick={() => editarInsumo(i)} style={btnEditar}>Editar</button>
-                      {i.ativo === 'inativo' ? (
-                        <button onClick={() => reativarInsumo(i.id)} style={btnReativar}>Reativar</button>
-                      ) : (
-                        <button onClick={() => desativarInsumo(i.id)} style={btnDesativar}>Desativar</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {aba === 'filiais' && (
-        <div>
-          <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>{editandoFilial ? 'Editar Filial' : 'Cadastrar Filial'}</h3>
-          <form onSubmit={handleSubmitFilial} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
-            <label htmlFor="nome_filial" style={labelStyle}>Nome da filial</label>
-            <input id="nome_filial" placeholder="Ex: WD Botafogo" value={formFilial.nome} onChange={(e) => setFormFilial({ ...formFilial, nome: e.target.value })} required style={inputStyle} />
-
-            <label htmlFor="endereco" style={labelStyle}>Endereço</label>
-            <input id="endereco" placeholder="Ex: Rua da Assembleia, 10 - Centro, RJ" value={formFilial.endereco} onChange={(e) => setFormFilial({ ...formFilial, endereco: e.target.value })} required style={inputStyle} />
-
-            <label htmlFor="responsavel" style={labelStyle}>Responsável</label>
-            <input id="responsavel" placeholder="Ex: João Silva" value={formFilial.responsavel} onChange={(e) => setFormFilial({ ...formFilial, responsavel: e.target.value })} required style={inputStyle} />
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="submit" style={btnPrimario}>
-                {editandoFilial ? 'Salvar alterações' : 'Cadastrar'}
-              </button>
-              {editandoFilial && (
-                <button type="button" onClick={cancelarEdicaoFilial} style={btnSecundario}>Cancelar</button>
-              )}
-            </div>
-          </form>
-
-          <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>Filiais cadastradas</h3>
-          <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-            <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'var(--cor-superficie-2)' }}>
-                  <th style={thStyle}>Nome</th>
-                  <th style={thStyle}>Endereço</th>
-                  <th style={thStyle}>Responsável</th>
-                  <th style={thStyle}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filiais.map((f) => (
-                  <tr key={f.id} style={{ opacity: f.ativo === 'inativo' ? 0.5 : 1 }}>
-                    <td style={tdStyle}>
-                      {f.nome}
-                      {f.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--cor-perigo)' }}>(inativo)</span>}
-                    </td>
-                    <td style={tdStyle}>{f.endereco}</td>
-                    <td style={tdStyle}>{f.responsavel}</td>
-                    <td style={tdStyle}>
-                      <button onClick={() => editarFilial(f)} style={btnEditar}>Editar</button>
-                      {f.ativo === 'inativo' ? (
-                        <button onClick={() => reativarFilial(f.id)} style={btnReativar}>Reativar</button>
-                      ) : (
-                        <button onClick={() => desativarFilial(f.id)} style={btnDesativar}>Desativar</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {aba === 'estoque' && (
-        <div>
-          <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>
-            Configurar Estoque Mínimo por Filial
-          </h3>
-
-          <form onSubmit={handleSubmitEstoqueMinimo} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="filial_id" style={labelStyle}>Filial</label>
-              <select
-                id="filial_id"
-                value={formEstoqueMinimo.filial_id}
-                onChange={(e) => setFormEstoqueMinimo({ ...formEstoqueMinimo, filial_id: e.target.value })}
-                required
-                style={inputStyle}
-              >
-                <option value="">Selecione a filial...</option>
-                {filiais.filter(f => f.ativo !== 'inativo').map((f) => (
-                  <option key={f.id} value={f.id}>{f.nome}</option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="insumo_id_estoque" style={labelStyle}>Insumo</label>
-              <select
-                id="insumo_id_estoque"
-                value={formEstoqueMinimo.insumo_id}
-                onChange={(e) => setFormEstoqueMinimo({ ...formEstoqueMinimo, insumo_id: e.target.value })}
-                required
-                style={inputStyle}
-              >
-                <option value="">Selecione o insumo...</option>
-                {insumos.filter(i => i.ativo !== 'inativo').map((i) => (
-                  <option key={i.id} value={i.id}>{i.nome} ({i.unidade})</option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="estoque_minimo_filial" style={labelStyle}>Estoque Mínimo</label>
-              <input
-                id="estoque_minimo_filial"
-                type="number"
-                placeholder="Ex: 10"
-                value={formEstoqueMinimo.estoque_minimo}
-                onChange={(e) => setFormEstoqueMinimo({ ...formEstoqueMinimo, estoque_minimo: e.target.value })}
-                required
-                min="0"
-                style={inputStyle}
-              />
-              <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', marginTop: '-8px' }}>
-                 <AlertCircle size={14} /> Este valor substitui o estoque mínimo global do insumo para esta filial específica.
-              </p>
-            </div>
-
-            <button type="submit" style={btnPrimario}>
-              Configurar
-            </button>
-          </form>
-
-          <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>
-            Configurações ativas
-          </h3>
-
-          {estoquesMinimos.length === 0 ? (
-            <p style={{ color: 'var(--cor-texto-suave)', textAlign: 'center', padding: '32px 0' }}>
-              Nenhuma configuração personalizada. Todas as filiais usam o estoque mínimo global dos insumos.
-            </p>
-          ) : (
+            <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>Insumos cadastrados</h3>
             <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-              <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', minWidth: '520px', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: 'var(--cor-superficie-2)' }}>
-                    <th style={thStyle}>Filial</th>
-                    <th style={thStyle}>Insumo</th>
-                    <th style={thStyle}>Estoque Mínimo</th>
+                    <th style={thStyle}>Nome</th>
+                    <th style={thStyle}>Unidade</th>
+                    <th style={thStyle}>Estoque mínimo</th>
                     <th style={thStyle}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {estoquesMinimos.map((e) => {
-                    const filial = filiais.find(f => f.id === e.filial_id);
-                    const insumo = insumos.find(i => i.id === e.insumo_id);
-                    const globalMin = insumo ? insumo.estoque_minimo : '—';
-
-                    return (
-                      <tr key={`${e.filial_id}-${e.insumo_id}`}>
-                        <td style={tdStyle}>{filial ? filial.nome : e.filial_id}</td>
-                        <td style={tdStyle}>{insumo ? insumo.nome : e.insumo_id}</td>
-                        <td style={{ ...tdStyle, fontWeight: '500', color: 'var(--cor-destaque)' }}>
-                          {e.estoque_minimo}
-                          {globalMin !== '—' && (
-                            <span style={{ fontSize: '11px', color: 'var(--cor-texto-suave)', marginLeft: '8px' }}>
-                              (global: {globalMin})
-                            </span>
-                          )}
-                        </td>
-                        <td style={tdStyle}>
-                          <button
-                            onClick={async () => {
-                              if (!confirm(`Remover configuração para ${filial?.nome} - ${insumo?.nome}?`)) return;
-                              try {
-                                await api.delete(`/estoque-minimo/${e.filial_id}/${e.insumo_id}`);
-                                setMensagem('Configuração removida com sucesso!');
-                                setEhErro(false);
-                                const res = await api.get('/estoque-minimo');
-                                setEstoquesMinimos(res.data);
-                              } catch (error) {
-                                setMensagem(error.response?.data?.error || 'Erro ao remover configuração.');
-                                setEhErro(true);
-                              }
-                            }}
-                            style={btnDesativar}
-                          >
-                            Remover
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {insumos.map((i) => (
+                    <tr key={i.id} style={{ opacity: i.ativo === 'inativo' ? 0.5 : 1 }}>
+                      <td style={tdStyle}>
+                        {i.nome}
+                        {i.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--cor-perigo)' }}>(inativo)</span>}
+                      </td>
+                      <td style={tdStyle}>{i.unidade}</td>
+                      <td style={tdStyle}>{i.estoque_minimo}</td>
+                      <td style={tdStyle}>
+                        <button onClick={() => editarInsumo(i)} style={btnEditar}>Editar</button>
+                        {i.ativo === 'inativo' ? (
+                          <button onClick={() => reativarInsumo(i.id)} style={btnReativar}>Reativar</button>
+                        ) : (
+                          <button onClick={() => desativarInsumo(i.id)} style={btnDesativar}>Desativar</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+
+        {aba === 'filiais' && (
+          <div>
+            <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>{editandoFilial ? 'Editar Filial' : 'Cadastrar Filial'}</h3>
+            <form onSubmit={handleSubmitFilial} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
+              <label htmlFor="nome_filial" style={labelStyle}>Nome da filial</label>
+              <input id="nome_filial" placeholder="Ex: WD Botafogo" value={formFilial.nome} onChange={(e) => setFormFilial({ ...formFilial, nome: e.target.value })} required style={inputStyle} />
+
+              <label htmlFor="endereco" style={labelStyle}>Endereço</label>
+              <input id="endereco" placeholder="Ex: Rua da Assembleia, 10 - Centro, RJ" value={formFilial.endereco} onChange={(e) => setFormFilial({ ...formFilial, endereco: e.target.value })} required style={inputStyle} />
+
+              <label htmlFor="responsavel" style={labelStyle}>Responsável</label>
+              <input id="responsavel" placeholder="Ex: João Silva" value={formFilial.responsavel} onChange={(e) => setFormFilial({ ...formFilial, responsavel: e.target.value })} required style={inputStyle} />
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="submit" style={btnPrimario}>
+                  {editandoFilial ? 'Salvar alterações' : 'Cadastrar'}
+                </button>
+                {editandoFilial && (
+                  <button type="button" onClick={cancelarEdicaoFilial} style={btnSecundario}>Cancelar</button>
+                )}
+              </div>
+            </form>
+
+            <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>Filiais cadastradas</h3>
+            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+              <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                    <th style={thStyle}>Nome</th>
+                    <th style={thStyle}>Endereço</th>
+                    <th style={thStyle}>Responsável</th>
+                    <th style={thStyle}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filiais.map((f) => (
+                    <tr key={f.id} style={{ opacity: f.ativo === 'inativo' ? 0.5 : 1 }}>
+                      <td style={tdStyle}>
+                        {f.nome}
+                        {f.ativo === 'inativo' && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--cor-perigo)' }}>(inativo)</span>}
+                      </td>
+                      <td style={tdStyle}>{f.endereco}</td>
+                      <td style={tdStyle}>{f.responsavel}</td>
+                      <td style={tdStyle}>
+                        <button onClick={() => editarFilial(f)} style={btnEditar}>Editar</button>
+                        {f.ativo === 'inativo' ? (
+                          <button onClick={() => reativarFilial(f.id)} style={btnReativar}>Reativar</button>
+                        ) : (
+                          <button onClick={() => desativarFilial(f.id)} style={btnDesativar}>Desativar</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {aba === 'estoque' && (
+          <div>
+            <h3 style={{ marginBottom: '16px', color: 'var(--cor-texto-titulo)' }}>
+              Configurar Estoque Mínimo por Filial
+            </h3>
+
+            <form onSubmit={handleSubmitEstoqueMinimo} style={{ marginBottom: '32px', background: 'var(--cor-superficie)', border: '1px solid var(--cor-borda)', borderRadius: '12px', padding: '24px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label htmlFor="filial_id" style={labelStyle}>Filial</label>
+                <select
+                  id="filial_id"
+                  value={formEstoqueMinimo.filial_id}
+                  onChange={(e) => setFormEstoqueMinimo({ ...formEstoqueMinimo, filial_id: e.target.value })}
+                  required
+                  style={inputStyle}
+                >
+                  <option value="">Selecione a filial...</option>
+                  {filiais.filter(f => f.ativo !== 'inativo').map((f) => (
+                    <option key={f.id} value={f.id}>{f.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label htmlFor="insumo_id_estoque" style={labelStyle}>Insumo</label>
+                <SeletorInsumo
+                  insumos={insumos}
+                  valor={formEstoqueMinimo.insumo_id}
+                  onChange={(value) => setFormEstoqueMinimo({ ...formEstoqueMinimo, insumo_id: value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label htmlFor="estoque_minimo_filial" style={labelStyle}>Estoque Mínimo</label>
+                <input
+                  id="estoque_minimo_filial"
+                  type="number"
+                  placeholder="Ex: 10"
+                  value={formEstoqueMinimo.estoque_minimo}
+                  onChange={(e) => setFormEstoqueMinimo({ ...formEstoqueMinimo, estoque_minimo: e.target.value })}
+                  required
+                  min="0"
+                  style={inputStyle}
+                />
+                <p style={{ fontSize: '12px', color: 'var(--cor-texto-suave)', marginTop: '-8px' }}>
+                  <AlertCircle size={14} /> Este valor substitui o estoque mínimo global do insumo para esta filial específica.
+                </p>
+              </div>
+
+              <button type="submit" style={btnPrimario}>
+                Configurar
+              </button>
+            </form>
+
+            <h3 style={{ marginBottom: '12px', color: 'var(--cor-texto-titulo)' }}>
+              Configurações ativas
+            </h3>
+
+            {estoquesMinimos.length === 0 ? (
+              <p style={{ color: 'var(--cor-texto-suave)', textAlign: 'center', padding: '32px 0' }}>
+                Nenhuma configuração personalizada. Todas as filiais usam o estoque mínimo global dos insumos.
+              </p>
+            ) : (
+              <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+                <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--cor-superficie-2)' }}>
+                      <th style={thStyle}>Filial</th>
+                      <th style={thStyle}>Insumo</th>
+                      <th style={thStyle}>Estoque Mínimo</th>
+                      <th style={thStyle}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {estoquesMinimos.map((e) => {
+                      const filial = filiais.find(f => f.id === e.filial_id);
+                      const insumo = insumos.find(i => i.id === e.insumo_id);
+                      const globalMin = insumo ? insumo.estoque_minimo : '—';
+
+                      return (
+                        <tr key={`${e.filial_id}-${e.insumo_id}`}>
+                          <td style={tdStyle}>{filial ? filial.nome : e.filial_id}</td>
+                          <td style={tdStyle}>{insumo ? insumo.nome : e.insumo_id}</td>
+                          <td style={{ ...tdStyle, fontWeight: '500', color: 'var(--cor-destaque)' }}>
+                            {e.estoque_minimo}
+                            {globalMin !== '—' && (
+                              <span style={{ fontSize: '11px', color: 'var(--cor-texto-suave)', marginLeft: '8px' }}>
+                                (global: {globalMin})
+                              </span>
+                            )}
+                          </td>
+                          <td style={tdStyle}>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Remover configuração para ${filial?.nome} - ${insumo?.nome}?`)) return;
+                                try {
+                                  await api.delete(`/estoque-minimo/${e.filial_id}/${e.insumo_id}`);
+                                  setMensagem('Configuração removida com sucesso!');
+                                  setEhErro(false);
+                                  const res = await api.get('/estoque-minimo');
+                                  setEstoquesMinimos(res.data);
+                                } catch (error) {
+                                  setMensagem(error.response?.data?.error || 'Erro ao remover configuração.');
+                                  setEhErro(true);
+                                }
+                              }}
+                              style={btnDesativar}
+                            >
+                              Remover
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
