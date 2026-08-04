@@ -21,6 +21,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import SeletorInsumo from "../components/SeletorInsumo";
+import { classificarMovimento } from '../utils/classificarMovimento';
+import ComparativoMensal from '../components/ComparativoMensal';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 ChartJS.register(
   CategoryScale,
@@ -36,6 +40,7 @@ export default function Relatorio() {
   const [usuarios, setUsuarios] = useState([]);
   const [insumos, setInsumos] = useState([]);
   const [filiais, setFiliais] = useState([]);
+  const [aba, setAba] = useState('movimentacoes');
   const [filtros, setFiltros] = useState({
     filial: "",
     insumo_id: "",
@@ -49,15 +54,15 @@ export default function Relatorio() {
     transferencia: 0,
     total: 0,
   });
+  const [dataInicio, setDataInicio] = useState(null);
+  const [dataFim, setDataFim] = useState(null);
+  const [movimentacoesComparativo, setMovimentacoesComparativo] = useState([]);
+  const [loadingComparativo, setLoadingComparativo] = useState(false);
+  const [mesComparativo, setMesComparativo] = useState(new Date().getMonth() + 1);
+  const [anoComparativo, setAnoComparativo] = useState(new Date().getFullYear());
 
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const ehGestor = usuario?.filial_id === "gestor";
-
-  const classificarMovimento = (m) => {
-    if (m.tipo === "entrada") return "entrada";
-    if (m.tipo === "saida" && m.filial_destino === "") return "consumo";
-    return "transferencia"; return "saida";
-  };
 
   const calcularResumo = useCallback((dados) => {
     const consumo = dados
@@ -104,6 +109,32 @@ export default function Relatorio() {
     }
   }, [filtros, ehGestor, usuario?.filial_id, calcularResumo]);
 
+  // Função para buscar movimentações do mês selecionado
+  const buscarComparativo = useCallback(async (mes, ano) => {
+    setLoadingComparativo(true);
+    try {
+      // Calcula o primeiro e último dia do mês
+      const dataInicio = new Date(ano, mes - 1, 1);
+      const dataFim = new Date(ano, mes, 0); // último dia do mês
+
+      const params = new URLSearchParams();
+      params.append('data_inicio', dataInicio.toISOString().split('T')[0]);
+      params.append('data_fim', dataFim.toISOString().split('T')[0]);
+
+      // Se houver outros filtros (filial, insumo, etc.), adicione aqui
+      // Mas o ComparativoMensal já filtra internamente, então passamos tudo
+
+      const res = await api.get(`/movimentacoes?${params.toString()}`);
+      setMovimentacoesComparativo(res.data);
+    } catch (error) {
+      console.error('Erro ao buscar movimentações do mês:', error);
+    } finally {
+      setLoadingComparativo(false);
+    }
+  }, []);
+
+  const [filtrosComparativo, setFiltrosComparativo] = useState({ mes_ano: '', tipo: '', insumo_id: '', filial: '' });
+
   useEffect(() => {
     const carregarDadosIniciais = async () => {
       try {
@@ -123,8 +154,16 @@ export default function Relatorio() {
     carregarDadosIniciais();
   }, [buscar]);
 
+  useEffect(() => {
+    if (aba === 'comparativo') {
+      buscarComparativo(mesComparativo, anoComparativo);
+    }
+  }, [aba, mesComparativo, anoComparativo, buscarComparativo]);
+
   const handleFiltro = (e) =>
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
+
+  const handleFiltroComparativo = (e) => setFiltrosComparativo({ ...filtrosComparativo, [e.target.name]: e.target.value });
 
   const nomeFilia = (id) => filiais.find((f) => f.id === id)?.nome || id;
   const nomeInsumo = (id) => insumos.find((i) => i.id === id)?.nome || id;
@@ -239,6 +278,17 @@ export default function Relatorio() {
     flex: "1",
     minWidth: "150px",
   };
+  const abaStyle = (ativa) => ({
+    padding: '9px 18px',
+    background: ativa ? 'var(--cor-destaque)' : 'transparent',
+    color: ativa ? '#fff' : 'var(--cor-texto-suave)',
+    border: `1px solid ${ativa ? 'var(--cor-destaque)' : 'var(--cor-borda)'}`,
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s',
+  });
 
   return (
     <>
@@ -258,387 +308,423 @@ export default function Relatorio() {
           Relatório de Movimentações
         </h2>
 
-        {/* Filtros */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            flexWrap: "wrap",
-            marginBottom: "24px",
-            marginTop: "16px",
-            alignItems: "center",
-          }}
-        >
-          {ehGestor && (
-            <select
-              name="filial"
-              value={filtros.filial}
-              onChange={handleFiltro}
-              style={filterStyle}
-            >
-              <option value="">Todas as filiais</option>
-              {filiais.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.nome}
-                </option>
-              ))}
-            </select>
-          )}
-
-          <SeletorInsumo
-            insumos={insumos}
-            valor={filtros.insumo_id}
-            onChange={(id) => setFiltros({ ...filtros, insumo_id: id })}
-            placeholder="Todos os insumos"
-          />
-
-          <select
-            name="categoria"
-            value={filtros.categoria}
-            onChange={handleFiltro}
-            style={filterStyle}
-          >
-            <option value="">Todas as movimentações</option>
-            <option value="consumo">Apenas Consumo</option>
-            <option value="transferencia">Apenas Transferências</option>
-            <option value="entrada">Apenas Entradas</option>
-          </select>
-
-          <input
-            type="date"
-            name="data_inicio"
-            value={filtros.data_inicio}
-            onChange={handleFiltro}
-            placeholder="Inicio"
-            style={{ ...filterStyle, maxWidth: "138.5px", flexShrink: 0 }}
-          />
-          <input
-            type="date"
-            name="data_fim"
-            value={filtros.data_fim}
-            onChange={handleFiltro}
-            style={{ ...filterStyle, maxWidth: "138.5px", flexShrink: 0 }} />
-
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              width: "100%",
-              justifyContent: "flex-end",
-            }}
-          >
-            <button
-              onClick={buscar}
-              style={{
-                padding: "9px 18px",
-                background: "var(--cor-destaque)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "var(--cor-destaque-hover)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "var(--cor-destaque)")
-              }
-            >
-              <Filter size={16} />
-              Filtrar
-            </button>
-            <button
-              onClick={exportarCSV}
-              style={{
-                padding: "9px 18px",
-                background: "transparent",
-                color: "var(--cor-texto)",
-                border: "1px solid var(--cor-borda)",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                transition: "border-color 0.2s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.borderColor = "var(--cor-destaque)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.borderColor = "var(--cor-borda)")
-              }
-            >
-              <Download size={16} />
-              Exportar CSV
-            </button>
-          </div>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', marginTop: '16px' }}>
+          <button onClick={() => setAba('movimentacoes')} style={abaStyle(aba === 'movimentacoes')}>
+            Movimentações
+          </button>
+          <button onClick={() => setAba('comparativo')} style={abaStyle(aba === 'comparativo')}>
+            Comparativo Mensal
+          </button>
         </div>
 
-        {/* Cards de Resumo */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            flexWrap: "wrap",
-            marginBottom: "24px",
-          }}
-        >
-          <div
-            style={{ ...cardStyle, borderLeft: "4px solid var(--cor-perigo)" }}
-          >
-            <p
+        {aba === 'movimentacoes' && (
+          <>
+            {/* Filtros */}
+            <div
               style={{
-                fontSize: "12px",
-                color: "var(--cor-texto-suave)",
-                margin: "0 0 4px",
                 display: "flex",
+                gap: "12px",
+                flexWrap: "wrap",
+                marginBottom: "24px",
+                marginTop: "16px",
                 alignItems: "center",
-                gap: "4px",
               }}
             >
-              <Package size={14} /> Consumo
-            </p>
-            <p
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                color: "var(--cor-perigo)",
-                margin: 0,
-              }}
-            >
-              {resumo.consumo}
-            </p>
-          </div>
-          <div
-            style={{ ...cardStyle, borderLeft: "4px solid var(--cor-alerta)" }}
-          >
-            <p
-              style={{
-                fontSize: "12px",
-                color: "var(--cor-texto-suave)",
-                margin: "0 0 4px",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-              }}
-            >
-              <ArrowRightLeft size={14} /> Transferências
-            </p>
-            <p
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                color: "var(--cor-alerta)",
-                margin: 0,
-              }}
-            >
-              {resumo.transferencia}
-            </p>
-          </div>
-          <div
-            style={{
-              ...cardStyle,
-              borderLeft: "4px solid var(--cor-destaque)",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "12px",
-                color: "var(--cor-texto-suave)",
-                margin: "0 0 4px",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-              }}
-            >
-              <TrendingUp size={14} /> Total Movimentado
-            </p>
-            <p
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                color: "var(--cor-destaque)",
-                margin: 0,
-              }}
-            >
-              {resumo.total}
-            </p>
-          </div>
-        </div>
-
-        {movimentacoes.filter((m) => classificarMovimento(m) === (filtros.categoria || "consumo")).length > 0 && (
-          <div
-            style={{
-              marginBottom: "32px",
-              background: "var(--cor-superficie)",
-              borderRadius: "12px",
-              padding: "24px",
-              border: "1px solid var(--cor-borda)",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-            }}
-          >
-            <h3
-              style={{
-                marginBottom: "16px",
-                color: "var(--cor-texto-titulo)",
-                fontSize: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <BarChart3 size={18} />
-              Top 10 {{ consumo: "Consumo", transferencia: "Transferências", entrada: "Entradas" }[filtros.categoria || "consumo"]} por Insumo
-            </h3>
-            <div style={{ height: "320px" }}>
-              {" "}
-              {/* ← altura fixa e maior */}
-              <Bar
-                data={getDadosGrafico()}
-                options={{
-                  indexAxis: "y", // ← barras HORIZONTAIS!
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (context) => `${context.parsed.x} unidades`,
-                      },
-                    },
-                  },
-                  scales: {
-                    x: {
-                      beginAtZero: true,
-                      ticks: { stepSize: 1 },
-                      grid: { display: false },
-                    },
-                    y: {
-                      grid: { display: false },
-                      ticks: {
-                        font: { size: 12 },
-                      },
-                    },
-                  },
-                  layout: {
-                    padding: {
-                      left: 0,
-                      right: 10,
-                    },
-                  },
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Tabela */}
-        {loading && (
-          <p style={{ color: "var(--cor-texto-suave)" }}>Carregando...</p>
-        )}
-        <div
-          style={{
-            overflowX: "auto",
-            maxWidth: "100%",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "var(--cor-superficie-2)" }}>
-                <th style={thStyle}>Data</th>
-                <th style={thStyle}>Tipo</th>
-                <th style={thStyle}>Insumo</th>
-                <th style={thStyle}>Unidade</th>
-                <th style={thStyle}>Origem</th>
-                <th style={thStyle}>Destino</th>
-                <th style={thStyle}>Requisitante</th>
-                <th style={thStyle}>Qtd</th>
-                <th style={thStyle}>NF</th>
-                <th style={thStyle}>Responsável</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movimentacoes.length === 0 && !loading && (
-                <tr>
-                  <td
-                    colSpan="10"
-                    style={{
-                      padding: "16px",
-                      textAlign: "center",
-                      color: "var(--cor-texto-suave)",
-                    }}
-                  >
-                    <AlertCircle
-                      size={16}
-                      style={{ marginRight: "6px", verticalAlign: "middle" }}
-                    />
-                    Nenhuma movimentação encontrada
-                  </td>
-                </tr>
+              {ehGestor && (
+                <select
+                  name="filial"
+                  value={filtros.filial}
+                  onChange={handleFiltro}
+                  style={filterStyle}
+                >
+                  <option value="">Todas as filiais</option>
+                  {filiais.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.nome}
+                    </option>
+                  ))}
+                </select>
               )}
-              {movimentacoes.map((m) => {
-                const isConsumo = classificarMovimento(m) === "consumo";
-                return (
-                  <tr
-                    key={m.id}
-                    style={{
-                      background: isConsumo
-                        ? "rgba(220, 38, 38, 0.05)"
-                        : "transparent",
+
+              <SeletorInsumo
+                insumos={insumos}
+                valor={filtros.insumo_id}
+                onChange={(id) => setFiltros({ ...filtros, insumo_id: id })}
+                placeholder="Todos os insumos"
+              />
+
+              <select
+                name="categoria"
+                value={filtros.categoria}
+                onChange={handleFiltro}
+                style={filterStyle}
+              >
+                <option value="">Todas as movimentações</option>
+                <option value="consumo">Apenas Consumo</option>
+                <option value="transferencia">Apenas Transferências</option>
+                <option value="entrada">Apenas Entradas</option>
+              </select>
+              <div style={{ width: "139px", flexShrink: 0, overflow: "hidden" }}>
+                <DatePicker
+                  selected={filtros.data_inicio ? new Date(filtros.data_inicio) : null}
+                  onChange={(date) => {
+                    setFiltros({ ...filtros, data_inicio: date ? date.toISOString().split('T')[0] : '' });
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Data inicial"
+                  className="datepicker-custom"
+                />
+              </div>
+              <div style={{ width: "139px", flexShrink: 0, overflow: "hidden" }}>
+                <DatePicker
+                  selected={filtros.data_fim ? new Date(filtros.data_fim) : null}
+                  onChange={(date) => {
+                    setFiltros({ ...filtros, data_fim: date ? date.toISOString().split('T')[0] : '' });
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Data final"
+                  className="datepicker-custom"
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  width: "100%",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={buscar}
+                  style={{
+                    padding: "9px 18px",
+                    background: "var(--cor-destaque)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "background 0.2s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "var(--cor-destaque-hover)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "var(--cor-destaque)")
+                  }
+                >
+                  <Filter size={16} />
+                  Filtrar
+                </button>
+                <button
+                  onClick={exportarCSV}
+                  style={{
+                    padding: "9px 18px",
+                    background: "transparent",
+                    color: "var(--cor-texto)",
+                    border: "1px solid var(--cor-borda)",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.borderColor = "var(--cor-destaque)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.borderColor = "var(--cor-borda)")
+                  }
+                >
+                  <Download size={16} />
+                  Exportar CSV
+                </button>
+              </div>
+            </div>
+
+            {/* Cards de Resumo */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                flexWrap: "wrap",
+                marginBottom: "24px",
+              }}
+            >
+              <div
+                style={{ ...cardStyle, borderLeft: "4px solid var(--cor-perigo)" }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--cor-texto-suave)",
+                    margin: "0 0 4px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <Package size={14} /> Consumo
+                </p>
+                <p
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "600",
+                    color: "var(--cor-perigo)",
+                    margin: 0,
+                  }}
+                >
+                  {resumo.consumo}
+                </p>
+              </div>
+              <div
+                style={{ ...cardStyle, borderLeft: "4px solid var(--cor-alerta)" }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--cor-texto-suave)",
+                    margin: "0 0 4px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <ArrowRightLeft size={14} /> Transferências
+                </p>
+                <p
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "600",
+                    color: "var(--cor-alerta)",
+                    margin: 0,
+                  }}
+                >
+                  {resumo.transferencia}
+                </p>
+              </div>
+              <div
+                style={{
+                  ...cardStyle,
+                  borderLeft: "4px solid var(--cor-destaque)",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--cor-texto-suave)",
+                    margin: "0 0 4px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <TrendingUp size={14} /> Total Movimentado
+                </p>
+                <p
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "600",
+                    color: "var(--cor-destaque)",
+                    margin: 0,
+                  }}
+                >
+                  {resumo.total}
+                </p>
+              </div>
+            </div>
+
+            {movimentacoes.filter((m) => classificarMovimento(m) === (filtros.categoria || "consumo")).length > 0 && (
+              <div
+                style={{
+                  marginBottom: "32px",
+                  background: "var(--cor-superficie)",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  border: "1px solid var(--cor-borda)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                }}
+              >
+                <h3
+                  style={{
+                    marginBottom: "16px",
+                    color: "var(--cor-texto-titulo)",
+                    fontSize: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <BarChart3 size={18} />
+                  Top 10 {{ consumo: "Consumo", transferencia: "Transferências", entrada: "Entradas" }[filtros.categoria || "consumo"]} por Insumo
+                </h3>
+                <div style={{ height: "320px" }}>
+                  {" "}
+                  {/* ← altura fixa e maior */}
+                  <Bar
+                    data={getDadosGrafico()}
+                    options={{
+                      indexAxis: "y", // ← barras HORIZONTAIS!
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) => `${context.parsed.x} unidades`,
+                          },
+                        },
+                      },
+                      scales: {
+                        x: {
+                          beginAtZero: true,
+                          ticks: { stepSize: 1 },
+                          grid: { display: false },
+                        },
+                        y: {
+                          grid: { display: false },
+                          ticks: {
+                            font: { size: 12 },
+                          },
+                        },
+                      },
+                      layout: {
+                        padding: {
+                          left: 0,
+                          right: 10,
+                        },
+                      },
                     }}
-                  >
-                    <td style={tdStyle}>
-                      {new Date(m.data).toLocaleString("pt-BR")}
-                    </td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        color:
-                          m.tipo === "entrada"
-                            ? "var(--cor-sucesso)"
-                            : "var(--cor-perigo)",
-                      }}
-                    >
-                      {m.tipo}
-                      {isConsumo && (
-                        <span
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Tabela */}
+            {loading && (
+              <p style={{ color: "var(--cor-texto-suave)" }}>Carregando...</p>
+            )}
+            <div
+              style={{
+                overflowX: "auto",
+                maxWidth: "100%",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "var(--cor-superficie-2)" }}>
+                    <th style={thStyle}>Data</th>
+                    <th style={thStyle}>Tipo</th>
+                    <th style={thStyle}>Insumo</th>
+                    <th style={thStyle}>Unidade</th>
+                    <th style={thStyle}>Origem</th>
+                    <th style={thStyle}>Destino</th>
+                    <th style={thStyle}>Requisitante</th>
+                    <th style={thStyle}>Qtd</th>
+                    <th style={thStyle}>NF</th>
+                    <th style={thStyle}>Responsável</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movimentacoes.length === 0 && !loading && (
+                    <tr>
+                      <td
+                        colSpan="10"
+                        style={{
+                          padding: "16px",
+                          textAlign: "center",
+                          color: "var(--cor-texto-suave)",
+                        }}
+                      >
+                        <AlertCircle
+                          size={16}
+                          style={{ marginRight: "6px", verticalAlign: "middle" }}
+                        />
+                        Nenhuma movimentação encontrada
+                      </td>
+                    </tr>
+                  )}
+                  {movimentacoes.map((m) => {
+                    const isConsumo = classificarMovimento(m) === "consumo";
+                    return (
+                      <tr
+                        key={m.id}
+                        style={{
+                          background: isConsumo
+                            ? "rgba(220, 38, 38, 0.05)"
+                            : "transparent",
+                        }}
+                      >
+                        <td style={tdStyle}>
+                          {new Date(m.data).toLocaleString("pt-BR")}
+                        </td>
+                        <td
                           style={{
-                            fontSize: "10px",
-                            marginLeft: "4px",
-                            background: "var(--cor-perigo)",
-                            color: "#fff",
-                            padding: "1px 6px",
-                            borderRadius: "10px",
+                            ...tdStyle,
+                            color:
+                              m.tipo === "entrada"
+                                ? "var(--cor-sucesso)"
+                                : "var(--cor-perigo)",
                           }}
                         >
-                          consumo
-                        </span>
-                      )}
-                    </td>
-                    <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
-                    <td style={tdStyle}>{nomeUnidade(m.insumo_id)}</td>
-                    <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
-                    <td style={tdStyle}>
-                      {isConsumo ? "Consumo" : nomeFilia(m.filial_destino)}
-                    </td>
-                    <td style={tdStyle}>{m.requisitante || "—"}</td>
-                    <td style={tdStyle}>{m.quantidade}</td>
-                    <td style={tdStyle}>{m.nota_fiscal || "—"}</td>
-                    <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          {m.tipo}
+                          {isConsumo && (
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                marginLeft: "4px",
+                                background: "var(--cor-perigo)",
+                                color: "#fff",
+                                padding: "1px 6px",
+                                borderRadius: "10px",
+                              }}
+                            >
+                              consumo
+                            </span>
+                          )}
+                        </td>
+                        <td style={tdStyle}>{nomeInsumo(m.insumo_id)}</td>
+                        <td style={tdStyle}>{nomeUnidade(m.insumo_id)}</td>
+                        <td style={tdStyle}>{nomeFilia(m.filial_origem)}</td>
+                        <td style={tdStyle}>
+                          {isConsumo ? "Consumo" : nomeFilia(m.filial_destino)}
+                        </td>
+                        <td style={tdStyle}>{m.requisitante || "—"}</td>
+                        <td style={tdStyle}>{m.quantidade}</td>
+                        <td style={tdStyle}>{m.nota_fiscal || "—"}</td>
+                        <td style={tdStyle}>{nomeResponsavel(m.responsavel_id)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+        {aba === 'comparativo' && (
+          <ComparativoMensal
+            movimentacoes={movimentacoesComparativo}
+            insumos={insumos}
+            filiais={filiais}
+            usuarios={usuarios}
+            ehGestor={ehGestor}
+            mes={mesComparativo}
+            ano={anoComparativo}
+            setMes={setMesComparativo}
+            setAno={setAnoComparativo}
+            loading={loadingComparativo}
+            onBuscar={() => buscarComparativo(mesComparativo, anoComparativo)}
+          />
+        )}
+        <div>
         </div>
       </div>
     </>

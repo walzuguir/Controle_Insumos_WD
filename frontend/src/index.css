@@ -25,8 +25,37 @@
   --cor-alerta: #f59e0b;
   --cor-alerta-bg: #3a2e12;
 
-  --cor-sombra-suave: 0 1px 3px rgba(0,0,0,0.04);
-  --cor-sombra-hover: 0 4px 12px rgba(0,0,0,0.06);
+  --cor-sombra-suave: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --cor-sombra-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.datepicker-custom {
+  padding: 9px;
+  background: var(--cor-superficie-2);
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--cor-texto);
+  width: 139px !important;
+  max-width: 139px !important;
+  min-width: 139px !important;
+  flex-shrink: 0;
+}
+
+.datepicker-custom:focus {
+  border-color: var(--cor-destaque);
+  outline: none;
+}
+
+.datepicker-wrapper {
+  display: inline-block !important;
+  width: 139px !important;
+  flex-shrink: 0 !important;
+}
+
+.datepicker-custom {
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 * {
