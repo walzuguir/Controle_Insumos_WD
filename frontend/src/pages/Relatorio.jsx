@@ -39,10 +39,9 @@ export default function Relatorio() {
   const [filtros, setFiltros] = useState({
     filial: "",
     insumo_id: "",
-    tipo: "",
     data_inicio: "",
     data_fim: "",
-    origem: "",
+    categoria: "",
   });
   const [loading, setLoading] = useState(false);
   const [resumo, setResumo] = useState({
@@ -57,7 +56,7 @@ export default function Relatorio() {
   const classificarMovimento = (m) => {
     if (m.tipo === "entrada") return "entrada";
     if (m.tipo === "saida" && m.filial_destino === "") return "consumo";
-    return "transferencia"; // saida com destino, ou tipo === transferencia
+    return "transferencia"; return "saida";
   };
 
   const calcularResumo = useCallback((dados) => {
@@ -66,11 +65,7 @@ export default function Relatorio() {
       .reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
 
     const transferencia = dados
-      .filter(
-        (m) =>
-          m.tipo === "transferencia" ||
-          (classificarMovimento(m) === "consumo"),
-      )
+      .filter((m) => classificarMovimento(m) === "transferencia")
       .reduce((acc, m) => acc + parseFloat(m.quantidade || 0), 0);
 
     const total = dados.reduce(
@@ -90,22 +85,14 @@ export default function Relatorio() {
         filtrosFinais.filial = usuario.filial_id;
       }
       Object.entries(filtrosFinais).forEach(([k, v]) => {
-        if (v && k !== "origem") params.append(k, v);
+        if (v && k !== "categoria") params.append(k, v);
       });
 
       const res = await api.get(`/movimentacoes?${params.toString()}`);
       let dados = res.data;
 
-      if (filtros.origem === "consumo") {
-        dados = dados.filter(
-          (m) => m.tipo === "saida" && m.filial_destino === '',
-        );
-      } else if (filtros.origem === "transferencia") {
-        dados = dados.filter(
-          (m) =>
-            m.tipo === "transferencia" ||
-            (m.tipo === "saida" && m.filial_destino !== ""),
-        );
+      if (filtros.categoria) {
+        dados = dados.filter((m) => classificarMovimento(m) === filtros.categoria);
       }
 
       setMovimentacoes(dados);
@@ -145,7 +132,7 @@ export default function Relatorio() {
   const nomeResponsavel = (id) => usuarios.find((u) => u.id === id)?.nome || id;
 
   const getDadosGrafico = () => {
-    const categoriaAtual = filtros.origem || "consumo"; // padrão: mantém comportamento atual
+    const categoriaAtual = filtros.categoria || "consumo";
 
     const agregado = {};
     movimentacoes
@@ -306,19 +293,8 @@ export default function Relatorio() {
           />
 
           <select
-            name="tipo"
-            value={filtros.tipo}
-            onChange={handleFiltro}
-            style={filterStyle}
-          >
-            <option value="">Todos os tipos</option>
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
-          </select>
-
-          <select
-            name="origem"
-            value={filtros.origem}
+            name="categoria"
+            value={filtros.categoria}
             onChange={handleFiltro}
             style={filterStyle}
           >
@@ -333,15 +309,15 @@ export default function Relatorio() {
             name="data_inicio"
             value={filtros.data_inicio}
             onChange={handleFiltro}
-            style={filterStyle}
+            placeholder="Inicio"
+            style={{ ...filterStyle, maxWidth: "138.5px", flexShrink: 0 }}
           />
           <input
             type="date"
             name="data_fim"
             value={filtros.data_fim}
             onChange={handleFiltro}
-            style={filterStyle}
-          />
+            style={{ ...filterStyle, maxWidth: "138.5px", flexShrink: 0 }} />
 
           <div
             style={{
@@ -498,7 +474,7 @@ export default function Relatorio() {
           </div>
         </div>
 
-        {movimentacoes.filter((m) => classificarMovimento(m) === (filtros.origem || "consumo")).length > 0 && (
+        {movimentacoes.filter((m) => classificarMovimento(m) === (filtros.categoria || "consumo")).length > 0 && (
           <div
             style={{
               marginBottom: "32px",
@@ -520,7 +496,7 @@ export default function Relatorio() {
               }}
             >
               <BarChart3 size={18} />
-              Top 10 {{ consumo: "Consumo", transferencia: "Transferências", entrada: "Entradas" }[filtros.origem || "consumo"]} por Insumo
+              Top 10 {{ consumo: "Consumo", transferencia: "Transferências", entrada: "Entradas" }[filtros.categoria || "consumo"]} por Insumo
             </h3>
             <div style={{ height: "320px" }}>
               {" "}
