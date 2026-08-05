@@ -4,10 +4,14 @@ import SeletorInsumo from './SeletorInsumo';
 import { classificarMovimento } from '../utils/classificarMovimento';
 import {
     Download,
-    ChartLine,
     TrendingUp,
     AlertCircle,
     ChartColumn,
+    CircleX,
+    X,
+    CalendarDays,
+    LayoutGrid,
+    Trash2
 } from 'lucide-react';
 
 export default function ComparativoMensal({
@@ -57,6 +61,29 @@ export default function ComparativoMensal({
         return totais;
     }, [movimentacoesFiltradas, diasNoMes]);
 
+    const totaisSemanais = useMemo(() => {
+        const semanas = [];
+        for (let i = 0; i < dadosPorDia.length; i += 7) {
+            const semana = dadosPorDia.slice(i, i + 7);
+            const total = semana.reduce((a, b) => a + b, 0);
+            const dias = semana.filter(d => d > 0).length;
+            semanas.push({
+                numero: Math.floor(i / 7) + 1,
+                total,
+                dias,
+                media: dias > 0 ? Math.round(total / dias) : 0,
+                diasRange: `${i + 1} - ${Math.min(i + 7, dadosPorDia.length)}`
+            });
+        }
+        return semanas;
+    }, [dadosPorDia]);
+
+    const mediaGeral = useMemo(() => {
+        if (totaisSemanais.length === 0) return 0;
+        const total = totaisSemanais.reduce((acc, s) => acc + s.total, 0);
+        return total / totaisSemanais.length;
+    }, [totaisSemanais]);
+
     const totalMes = dadosPorDia.reduce((a, b) => a + b, 0);
 
     const nomeInsumo = (id) => insumos.find(i => i.id === id)?.nome || id;
@@ -104,6 +131,27 @@ export default function ComparativoMensal({
         entrada: { bg: 'rgba(34, 197, 94, 0.6)', border: 'rgba(34, 197, 94, 1)' },
     };
     const corAtual = cores[categoria] || { bg: 'rgba(59, 130, 246, 0.6)', border: 'rgba(59, 130, 246, 1)' };
+
+    const coresDias = useMemo(() => {
+        const paleta = [
+            'var(--cor-destaque)',
+            'var(--cor-alerta)',
+            'var(--cor-sucesso)',
+            '#8b5cf6', // roxo
+            '#ec4899', // rosa
+            '#14b8a6', // teal
+            '#f97316', // laranja
+            '#6366f1', // índigo
+            '#84cc16', // lima
+            '#06b6d4', // ciano
+        ];
+
+        const mapa = {};
+        diasSelecionados.forEach((dia, index) => {
+            mapa[dia] = paleta[index % paleta.length];
+        });
+        return mapa;
+    }, [diasSelecionados]);
 
     const dadosGrafico = {
         labels: Array.from({ length: diasNoMes }, (_, i) => String(i + 1)),
@@ -229,7 +277,7 @@ export default function ComparativoMensal({
                     onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--cor-destaque)")}
                     onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--cor-borda)")}
                 >
-                    <Download size={16} />
+                    <Download size={16} strokeWidth={1.5} color="var(--cor-texto)" />
                     Exportar CSV
                 </button>
             </div>
@@ -242,12 +290,23 @@ export default function ComparativoMensal({
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <h3 style={{ color: 'var(--cor-texto-titulo)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                        <ChartLine size={18} />
+                        <CalendarDays size={18} strokeWidth={1.5} color="var(--cor-texto-titulo)" />
                         {nomesMeses[mes - 1]} de {ano}
                     </h3>
-                    <span style={{ fontSize: '13px', color: 'var(--cor-texto-suave)' }}>
-                        <TrendingUp size={14} /> Total do mês:
-                        <strong style={{ color: 'var(--cor-texto-titulo)' }}> {totalMes}</strong>
+                    <span style={{
+                        background: 'var(--cor-superficie-2)',
+                        padding: '6px 16px',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        color: 'var(--cor-texto)',
+                        border: '1px solid var(--cor-superficie-2)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                    }}>
+                        <TrendingUp size={14} strokeWidth={1.5} color="var(--cor-sucesso)" />
+                        <span style={{ color: 'var(--cor-texto-suave)' }}>Total do mês:</span>
+                        <strong style={{ color: 'var(--cor-sucesso)', fontSize: '16px' }}>{totalMes}</strong>
                     </span>
                 </div>
 
@@ -303,7 +362,7 @@ export default function ComparativoMensal({
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <h4 style={{ color: 'var(--cor-texto-titulo)', fontSize: '14px', margin: 0 }}>
-                                <ChartColumn size={16} /> Detalhes dos dias selecionados ({diasSelecionados.length})
+                                <ChartColumn size={16} strokeWidth={1.5} color="var(--cor-destaque)" /> Detalhes dos dias selecionados ({diasSelecionados.length})
                             </h4>
                             <button
                                 onClick={() => setDiasSelecionados([])}
@@ -319,7 +378,7 @@ export default function ComparativoMensal({
                                 onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-superficie-2)')}
                                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                             >
-                                ✕ Limpar todos
+                                <Trash2 color="#1e9bd7" strokeWidth={1.5} />
                             </button>
                         </div>
 
@@ -334,30 +393,69 @@ export default function ComparativoMensal({
                                 );
                             }
                             return (
-                                <div key={dia} style={{ marginBottom: '12px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                        <strong style={{ color: 'var(--cor-texto-titulo)', fontSize: '14px' }}>Dia {dia}:</strong>
-                                        <span style={{ fontSize: '12px', color: 'var(--cor-texto-suave)' }}>
-                                            Total: {dadosPorDia[dia - 1] || 0} unidades
-                                        </span>
+                                <div key={dia} style={{
+                                    background: 'var(--cor-superficie)',
+                                    border: '1px solid var(--cor-borda)',
+                                    borderRadius: '8px',
+                                    padding: '12px 16px',
+                                    marginBottom: '8px',
+                                    transition: 'all 0.2s ease',
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        flexWrap: 'wrap',
+                                        gap: '8px',
+                                        marginBottom: '8px',
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{
+                                                background: coresDias[dia] || 'var(--cor-destaque)',
+                                                color: '#fff',
+                                                padding: '2px 10px',
+                                                borderRadius: '12px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                            }}>
+                                                Dia {dia}
+                                            </span>
+                                            <span style={{
+                                                fontSize: '13px',
+                                                color: 'var(--cor-texto-titulo)',
+                                                fontWeight: '500',
+                                            }}>
+                                                Total: <strong>{dadosPorDia[dia - 1] || 0}</strong> unidades
+                                            </span>
+                                        </div>
                                         <button
                                             onClick={() => setDiasSelecionados(prev => prev.filter(d => d !== dia))}
                                             style={{
                                                 background: 'transparent',
                                                 border: 'none',
-                                                color: 'var(--cor-perigo)',
+                                                color: 'var(--cor-texto-suave)',
                                                 cursor: 'pointer',
-                                                fontSize: '12px',
-                                                padding: '2px 6px',
+                                                fontSize: '13px',
+                                                padding: '4px 8px',
                                                 borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                transition: 'all 0.2s',
                                             }}
-                                            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-perigo-bg)')}
-                                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = 'var(--cor-perigo-bg)';
+                                                e.currentTarget.style.color = 'var(--cor-perigo)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = 'transparent';
+                                                e.currentTarget.style.color = 'var(--cor-texto-suave)';
+                                            }}
                                         >
                                             ✕
                                         </button>
                                     </div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                         {diaInfo.insumos.map((insumo, idx) => (
                                             <span key={idx} style={{
                                                 background: 'var(--cor-superficie-2)',
@@ -393,6 +491,111 @@ export default function ComparativoMensal({
                     </div>
                 )}
             </div>
+            {/* Totais semanais */}
+            {dadosPorDia.some(d => d > 0) && (
+                <div style={{
+                    marginTop: '16px',
+                    borderTop: '1px solid var(--cor-borda)',
+                    paddingTop: '16px',
+                }}>
+                    <h4 style={{
+                        color: 'var(--cor-texto-titulo)',
+                        fontSize: '14px',
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                    }}>
+                        <LayoutGrid size={16} strokeWidth={1.5} color="var(--cor-texto-titulo)" />
+                        Totais por Semana
+                    </h4>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gap: '12px',
+                    }}>
+                        {totaisSemanais.map((semana) => {
+                            const isPico = semana.total === Math.max(...totaisSemanais.map(s => s.total));
+                            const isAcimaDaMedia = semana.total > mediaGeral;
+
+                            const corDestaque = isPico ? 'var(--cor-destaque)' : (isAcimaDaMedia ? 'var(--cor-alerta)' : 'var(--cor-texto-titulo)');
+                            const bordaDestaque = isPico ? `2px solid var(--cor-destaque)` : (isAcimaDaMedia ? '1px solid var(--cor-alerta)' : '1px solid var(--cor-borda)');
+                            const label = isPico ? '🏆 Pico' : (isAcimaDaMedia ? '⬆ Alta' : '');
+                            const fundoDestaque = isPico || isAcimaDaMedia ? 'var(--cor-superficie)' : 'var(--cor-superficie-2)';
+
+                            return (
+                                <div key={semana.numero} style={{
+                                    background: fundoDestaque, // ← estava isMax, agora usa fundoDestaque
+                                    padding: '14px 16px',
+                                    borderRadius: '10px',
+                                    border: bordaDestaque,
+                                    textAlign: 'center',
+                                    transition: 'all 0.2s ease',
+                                    cursor: 'default',
+                                    position: 'relative',
+                                }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                        e.currentTarget.style.boxShadow = 'var(--cor-sombra-hover)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}>
+                                    {/* Badge "Pico" ou "Alta" */}
+                                    {label && (
+                                        <span style={{
+                                            position: 'absolute',
+                                            top: '-6px',
+                                            right: '-6px',
+                                            background: isPico ? 'var(--cor-destaque)' : 'var(--cor-alerta)',
+                                            color: '#fff',
+                                            fontSize: '9px',
+                                            padding: '2px 8px',
+                                            borderRadius: '10px',
+                                            fontWeight: '600',
+                                            textTransform: 'uppercase',
+                                        }}>
+                                            {label}
+                                        </span>
+                                    )}
+                                    <div style={{
+                                        fontSize: '11px',
+                                        color: 'var(--cor-texto-suave)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px',
+                                    }}>
+                                        Semana {semana.numero}
+                                    </div>
+                                    <div style={{
+                                        fontSize: '22px',
+                                        fontWeight: '700',
+                                        color: corDestaque,
+                                        marginTop: '4px',
+                                    }}>
+                                        {semana.total}
+                                    </div>
+                                    <div style={{
+                                        fontSize: '11px',
+                                        color: 'var(--cor-texto-suave)',
+                                        marginTop: '2px',
+                                    }}>
+                                        {semana.dias} {semana.dias === 1 ? 'dia' : 'dias'} • média {semana.media}
+                                    </div>
+                                    <div style={{
+                                        fontSize: '10px',
+                                        color: 'var(--cor-texto-suave)',
+                                        marginTop: '2px',
+                                        opacity: 0.7,
+                                    }}>
+                                        Dias {semana.diasRange}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
