@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 import SeletorInsumo from './SeletorInsumo';
 import { classificarMovimento } from '../utils/classificarMovimento';
@@ -33,6 +33,15 @@ export default function ComparativoMensal({
     const [filialId, setFilialId] = useState('');
     const [responsavelId, setResponsavelId] = useState('');
     const [diasSelecionados, setDiasSelecionados] = useState([]);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const diasNoMes = new Date(ano, mes, 0).getDate();
 
@@ -216,20 +225,20 @@ export default function ComparativoMensal({
 
     return (
         <div>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px', alignItems: 'center' }}>
-                <select value={mes} onChange={(e) => { setMes(Number(e.target.value)); onBuscar(); }} style={filterStyle}>
+            <div style={{ display: 'flex', gap: isMobile ? '8px' : '12px', flexWrap: 'wrap', marginBottom: '20px', alignItems: 'center' }}>
+                <select value={mes} onChange={(e) => { setMes(Number(e.target.value)); onBuscar(); }} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     {nomesMeses.map((nome, i) => (
                         <option key={i} value={i + 1}>{nome}</option>
                     ))}
                 </select>
 
-                <select value={ano} onChange={(e) => { setAno(Number(e.target.value)); onBuscar(); }} style={filterStyle}>
+                <select value={ano} onChange={(e) => { setAno(Number(e.target.value)); onBuscar(); }} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     {Array.from({ length: 10 }, (_, i) => 2020 + i).map((a) => (
                         <option key={a} value={a}>{a}</option>
                     ))}
                 </select>
 
-                <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={filterStyle}>
+                <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     <option value="">Todas as movimentações</option>
                     <option value="consumo">Apenas Consumo</option>
                     <option value="transferencia">Apenas Transferências</option>
@@ -244,7 +253,7 @@ export default function ComparativoMensal({
                 />
 
                 {ehGestor && (
-                    <select value={filialId} onChange={(e) => setFilialId(e.target.value)} style={filterStyle}>
+                    <select value={filialId} onChange={(e) => setFilialId(e.target.value)} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                         <option value="">Todas as filiais</option>
                         {filiais.map((f) => (
                             <option key={f.id} value={f.id}>{f.nome}</option>
@@ -252,7 +261,7 @@ export default function ComparativoMensal({
                     </select>
                 )}
 
-                <select value={responsavelId} onChange={(e) => setResponsavelId(e.target.value)} style={filterStyle}>
+                <select value={responsavelId} onChange={(e) => setResponsavelId(e.target.value)} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     <option value="">Todos os responsáveis</option>
                     {usuarios.map((u) => (
                         <option key={u.id} value={u.id}>{u.nome}</option>
@@ -286,7 +295,7 @@ export default function ComparativoMensal({
                 background: 'var(--cor-superficie)',
                 border: '1px solid var(--cor-borda)',
                 borderRadius: '12px',
-                padding: '24px',
+                padding: isMobile ? '16px' : '24px',
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <h3 style={{ color: 'var(--cor-texto-titulo)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
@@ -295,9 +304,9 @@ export default function ComparativoMensal({
                     </h3>
                     <span style={{
                         background: 'var(--cor-superficie-2)',
-                        padding: '6px 16px',
+                        padding: isMobile ? '4px 12px' : '6px 16px',
                         borderRadius: '8px',
-                        fontSize: '13px',
+                        fontSize: isMobile ? '12px' : '13px',
                         color: 'var(--cor-texto)',
                         border: '1px solid var(--cor-superficie-2)',
                         display: 'inline-flex',
@@ -320,7 +329,7 @@ export default function ComparativoMensal({
                         </p>
                     </div>
                 ) : (
-                    <div style={{ height: '320px' }}>
+                    <div style={{ height: isMobile ? '260px' : '320px' }}>
                         <Bar
                             ref={chartRef}
                             data={dadosGrafico}
@@ -511,8 +520,8 @@ export default function ComparativoMensal({
                     </h4>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                        gap: '12px',
+                        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gap: isMobile ? '8px' : '12px',
                     }}>
                         {totaisSemanais.map((semana) => {
                             const isPico = semana.total === Math.max(...totaisSemanais.map(s => s.total));
@@ -526,7 +535,7 @@ export default function ComparativoMensal({
                             return (
                                 <div key={semana.numero} style={{
                                     background: fundoDestaque, // ← estava isMax, agora usa fundoDestaque
-                                    padding: '14px 16px',
+                                    padding: isMobile ? '10px 12px' : '14px 16px',
                                     borderRadius: '10px',
                                     border: bordaDestaque,
                                     textAlign: 'center',
