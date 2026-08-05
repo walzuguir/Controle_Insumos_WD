@@ -40,22 +40,12 @@
   max-width: 139px !important;
   min-width: 139px !important;
   flex-shrink: 0;
+  box-sizing: border-box !important;
 }
 
 .datepicker-custom:focus {
   border-color: var(--cor-destaque);
   outline: none;
-}
-
-.datepicker-wrapper {
-  display: inline-block !important;
-  width: 139px !important;
-  flex-shrink: 0 !important;
-}
-
-.datepicker-custom {
-  width: 100% !important;
-  box-sizing: border-box !important;
 }
 
 @keyframes fadeIn {

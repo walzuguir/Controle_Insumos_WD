@@ -243,14 +243,7 @@ export default function Relatorio() {
       "Categoria",
     ];
     const linhas = movimentacoes.map((m) => {
-      const isConsumo = m.tipo === "saida" && m.filial_destino === "";
-      const isTransferencia =
-        m.tipo === "transferencia" ||
-        (m.tipo === "saida" && m.filial_destino !== "");
-
-      let categoria = "Movimentação";
-      if (isConsumo) categoria = "Consumo";
-      else if (isTransferencia) categoria = "Transferência";
+      const categoria = classificarMovimento(m);
 
       return [
         new Date(m.data).toLocaleString("pt-BR"),
@@ -265,7 +258,9 @@ export default function Relatorio() {
         m.quantidade,
         m.nota_fiscal || "",
         nomeResponsavel(m.responsavel_id),
-        categoria,
+        categoria === "consumo" ? "Consumo" :
+          categoria === "transferencia" ? "Transferência" :
+            categoria === "entrada" ? "Entrada" : "Movimentação",
       ];
     });
     const csv = [headers, ...linhas].map((row) => row.join(";")).join("\n");

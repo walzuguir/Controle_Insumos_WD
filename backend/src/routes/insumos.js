@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
-const { getCache, setCache } = require('../services/cache');
 
 let cacheInsumos = null;
 let cacheInsumosTimestamp = null;

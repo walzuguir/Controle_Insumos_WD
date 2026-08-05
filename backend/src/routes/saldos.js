@@ -27,8 +27,6 @@ function invalidarTodosCaches() {
   console.log('Todos os caches invalidados');
 }
 
-module.exports.invalidarCache = invalidarCache;
-
 router.get('/', async (req, res) => {
   try {
     if (getCache('saldos') && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL)) {

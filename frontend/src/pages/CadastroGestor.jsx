@@ -51,7 +51,7 @@ export default function CadastroGestor() {
       setEditandoInsumo(null);
       const res = await api.get('/insumos?incluir_inativos=true');
       setInsumos(res.data);
-    } catch {
+    } catch (error) {
       setMensagem('Erro ao salvar insumo.');
       setEhErro(true);
     }
@@ -73,7 +73,7 @@ export default function CadastroGestor() {
       setEditandoFilial(null);
       const res = await api.get('/filiais?incluir_inativos=true');
       setFiliais(res.data);
-    } catch {
+    } catch (error) {
       setMensagem('Erro ao salvar filial.');
       setEhErro(true);
     }
@@ -108,7 +108,7 @@ export default function CadastroGestor() {
       setEhErro(false);
       const res = await api.get('/insumos?incluir_inativos=true');
       setInsumos(res.data);
-    } catch {
+    } catch (error) {
       setMensagem('Erro ao desativar insumo.');
       setEhErro(true);
     }
@@ -128,7 +128,7 @@ export default function CadastroGestor() {
       setEhErro(false);
       const res = await api.get('/filiais?incluir_inativos=true');
       setFiliais(res.data);
-    } catch {
+    } catch (error) {
       setMensagem('Erro ao desativar filial.');
       setEhErro(true);
     }
@@ -141,7 +141,7 @@ export default function CadastroGestor() {
       setEhErro(false);
       const res = await api.get('/insumos?incluir_inativos=true');
       setInsumos(res.data);
-    } catch {
+    } catch (error) {
       setMensagem('Erro ao reativar insumo.');
       setEhErro(true);
     }
@@ -154,7 +154,7 @@ export default function CadastroGestor() {
       setEhErro(false);
       const res = await api.get('/filiais?incluir_inativos=true');
       setFiliais(res.data);
-    } catch {
+    } catch (error) {
       setMensagem('Erro ao reativar filial.');
       setEhErro(true);
     }

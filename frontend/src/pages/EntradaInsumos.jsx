@@ -68,11 +68,9 @@ export default function EntradaInsumos() {
       } else {
         // ✅ Responsável: usa a filial do usuário
         payload.filial_destino = usuario?.filial_id; // ← USANDO usuario (já definido)
-        console.log('✅ Responsável: filial_destino =', payload.filial_destino);
       }
 
       const response = await api.post("/movimentacoes", payload);
-      console.log('✅ Resposta:', response.data);
 
       setMensagem("Entrada registrada com sucesso!");
       setEhErro(false);
@@ -153,7 +151,7 @@ export default function EntradaInsumos() {
               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--cor-destaque-hover)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'var(--cor-destaque)'}
             >
-              {loading ? 'Registrando...' : (
+              disabled={loading || (
                 <>
                   <ArrowUpCircle size={18} /> Registrar Entrada
                 </>

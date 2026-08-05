@@ -53,20 +53,6 @@ export default function Home() {
   }
   const ultimasMovimentacoes = [...movimentacoes].reverse().slice(0, 5);
 
-  const atalhos = [
-    { nome: "Registrar Entrada", rota: "/entrada", cor: "#2563eb" },
-    { nome: "Registrar Saída", rota: "/saida", cor: "#dc2626" },
-    { nome: "Dashboard", rota: "/dashboard", cor: "#16a34a" },
-    { nome: "Relatório", rota: "/relatorio", cor: "#9333ea" },
-  ];
-
-  if (ehGestor) {
-    atalhos.push(
-      { nome: "Painel de GAPs", rota: "/gaps", cor: "#d97706" },
-      { nome: "Painel do Gestor", rota: "/gestor", cor: "#0891b2" },
-    );
-  }
-
   return (
     <>
       <Header />

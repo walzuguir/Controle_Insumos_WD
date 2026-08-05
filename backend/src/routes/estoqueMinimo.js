@@ -1,24 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { getSheets, SPREADSHEET_ID, getNextId, findRowById } = require('../config/sheets');
-const { getCache, setCache } = require('../services/cache');
+const { invalidarCache } = require('./saldos');
 
 let cacheEstoqueMinimo = null;
 let cacheEstoqueMinimoTimestamp = null;
 const CACHE_TTL_ESTOQUE = 60000;
-
-function invalidarCacheSaldos() {
-  try {
-    const saldosModule = require.cache[require.resolve('../routes/saldos')];
-    if (saldosModule) {
-      delete require.cache[require.resolve('../routes/saldos')];
-      console.log('🗑️ Cache de saldos invalidado');
-    }
-  } catch (error) {
-    // Se não conseguir, apenas loga o erro
-    console.log('⚠️ Não foi possível invalidar cache automaticamente');
-  }
-}
 
 router.get('/', async (req, res) => {
   try {
@@ -98,7 +85,7 @@ router.post('/', async (req, res) => {
         },
       });
       
-      invalidarCacheSaldos();
+      invalidarCache();
 
       cacheEstoqueMinimo = null;
       cacheEstoqueMinimoTimestamp = null;
@@ -117,7 +104,7 @@ router.post('/', async (req, res) => {
         },
       });
       
-      invalidarCacheSaldos();
+      invalidarCache();
       
       cacheEstoqueMinimo = null;
       cacheEstoqueMinimoTimestamp = null;
@@ -166,7 +153,7 @@ router.delete('/:filial_id/:insumo_id', async (req, res) => {
       },
     });
 
-    invalidarCacheSaldos();
+    invalidarCache();
 
     cacheEstoqueMinimo = null;
     cacheEstoqueMinimoTimestamp = null;

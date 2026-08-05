@@ -7,8 +7,6 @@ import {
     TrendingUp,
     AlertCircle,
     ChartColumn,
-    CircleX,
-    X,
     CalendarDays,
     LayoutGrid,
     Trash2
@@ -25,7 +23,6 @@ export default function ComparativoMensal({
     setMes,
     setAno,
     loading,
-    onBuscar
 }) {
 
     const [categoria, setCategoria] = useState('');
@@ -226,13 +223,13 @@ export default function ComparativoMensal({
     return (
         <div>
             <div style={{ display: 'flex', gap: isMobile ? '8px' : '12px', flexWrap: 'wrap', marginBottom: '20px', alignItems: 'center' }}>
-                <select value={mes} onChange={(e) => { setMes(Number(e.target.value)); onBuscar(); }} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
+                <select value={mes} onChange={(e) => { setMes(Number(e.target.value)); }} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     {nomesMeses.map((nome, i) => (
                         <option key={i} value={i + 1}>{nome}</option>
                     ))}
                 </select>
 
-                <select value={ano} onChange={(e) => { setAno(Number(e.target.value)); onBuscar(); }} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
+                <select value={ano} onChange={(e) => { setAno(Number(e.target.value)); }} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     {Array.from({ length: 10 }, (_, i) => 2020 + i).map((a) => (
                         <option key={a} value={a}>{a}</option>
                     ))}
@@ -352,13 +349,12 @@ export default function ComparativoMensal({
                                             },
                                         },
                                     },
-                                    scales: {
-                                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                                        x: { grid: { display: false } },
-                                    },
-                                }
-                            }
-                            }
+                                },
+                                scales: {
+                                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                                    x: { grid: { display: false } },
+                                },
+                            }}
                         />
                     </div>
                 )}

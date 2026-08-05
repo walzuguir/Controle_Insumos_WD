@@ -121,7 +121,7 @@ function filtrarPorPerfil(saldos, filialUsuario) {
 async function verificarSaldoDisponivel(sheets, insumo_id, filial_id, quantidade) {
   const movimentacoesRes = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: 'Movimentacoes!A:K'
+    range: 'Movimentacoes!A:L'
   });
   
   const insumosRes = await sheets.spreadsheets.values.get({
