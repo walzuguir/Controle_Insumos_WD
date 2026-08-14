@@ -40,7 +40,6 @@ export default function Relatorio() {
   const [usuarios, setUsuarios] = useState([]);
   const [insumos, setInsumos] = useState([]);
   const [filiais, setFiliais] = useState([]);
-  const [cacheComparativo, setCacheComparativo] = useState({});
   const [aba, setAba] = useState('movimentacoes');
   const [filtros, setFiltros] = useState({
     filial: "",
@@ -114,15 +113,6 @@ export default function Relatorio() {
     let cancelled = false;
 
     const fetchComparativo = async () => {
-      const chave = `${anoComparativo}-${mesComparativo}`;
-
-      // 1. Verifica cache
-      if (cacheComparativo[chave]) {
-        setMovimentacoesComparativo(cacheComparativo[chave]);
-        return;
-      }
-
-      // 2. Se não tiver cache, busca na API
       setLoadingComparativo(true);
       try {
         const dataInicio = new Date(anoComparativo, mesComparativo - 1, 1);
@@ -135,10 +125,7 @@ export default function Relatorio() {
         const res = await api.get(`/movimentacoes?${params.toString()}`);
 
         if (!cancelled) {
-          const dados = res.data;
-          // Armazena no cache
-          setCacheComparativo(prev => ({ ...prev, [chave]: dados }));
-          setMovimentacoesComparativo(dados);
+          setMovimentacoesComparativo(res.data);
         }
       } catch (error) {
         if (!cancelled) {
@@ -156,7 +143,7 @@ export default function Relatorio() {
     return () => {
       cancelled = true;
     };
-  }, [aba, mesComparativo, anoComparativo, cacheComparativo]);
+  }, [aba, mesComparativo, anoComparativo]);
 
   useEffect(() => {
     const carregarDadosIniciais = async () => {
@@ -176,16 +163,6 @@ export default function Relatorio() {
     };
     carregarDadosIniciais();
   }, [buscar]);
-
-  const recarregarComparativo = useCallback(() => {
-    const chave = `${anoComparativo}-${mesComparativo}`;
-    setCacheComparativo(prev => {
-      const novoCache = { ...prev };
-      delete novoCache[chave];
-      return novoCache;
-    });
-    setMovimentacoesComparativo([]);
-  }, [anoComparativo, mesComparativo]);
 
   const handleFiltro = (e) =>
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
@@ -243,7 +220,14 @@ export default function Relatorio() {
       "Categoria",
     ];
     const linhas = movimentacoes.map((m) => {
-      const categoria = classificarMovimento(m);
+      const isConsumo = m.tipo === "saida" && m.filial_destino === "";
+      const isTransferencia =
+        m.tipo === "transferencia" ||
+        (m.tipo === "saida" && m.filial_destino !== "");
+
+      let categoria = "Movimentação";
+      if (isConsumo) categoria = "Consumo";
+      else if (isTransferencia) categoria = "Transferência";
 
       return [
         new Date(m.data).toLocaleString("pt-BR"),
@@ -258,9 +242,7 @@ export default function Relatorio() {
         m.quantidade,
         m.nota_fiscal || "",
         nomeResponsavel(m.responsavel_id),
-        categoria === "consumo" ? "Consumo" :
-          categoria === "transferencia" ? "Transferência" :
-            categoria === "entrada" ? "Entrada" : "Movimentação",
+        categoria,
       ];
     });
     const csv = [headers, ...linhas].map((row) => row.join(";")).join("\n");
@@ -368,7 +350,6 @@ export default function Relatorio() {
                     dateFormat="dd/MM/yyyy"
                     placeholderText="Data inicial"
                     className="datepicker-custom"
-                    isClearable
                   />
                 </div>
                 <div style={{ width: "139px", flexShrink: 0, flexGrow: 0 }}>
@@ -380,7 +361,6 @@ export default function Relatorio() {
                     dateFormat="dd/MM/yyyy"
                     placeholderText="Data final"
                     className="datepicker-custom"
-                    isClearable
                   />
                 </div>
               </div>
@@ -538,7 +518,6 @@ export default function Relatorio() {
             setMes={setMesComparativo}
             setAno={setAnoComparativo}
             loading={loadingComparativo}
-            onBuscar={recarregarComparativo}
           />
         )}
       </div>

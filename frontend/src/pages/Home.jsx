@@ -22,6 +22,7 @@ export default function Home() {
   const [saldos, setSaldos] = useState([]);
   const [movimentacoes, setMovimentacoes] = useState([]);
   const [insumos, setInsumos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const ehGestor = usuario?.filial_id === "gestor";
@@ -34,6 +35,28 @@ export default function Home() {
     api.get("/saldos").then((res) => setSaldos(res.data));
     api.get("/insumos").then((res) => setInsumos(res.data));
     api.get("/movimentacoes").then((res) => setMovimentacoes(res.data));
+  }, []);
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        const [filiaisRes, saldosRes, insumosRes, movRes] = await Promise.all([
+          api.get("/filiais"),
+          api.get("/saldos"),
+          api.get("/insumos"),
+          api.get("/movimentacoes"),
+        ]);
+        setFiliais(filiaisRes.data);
+        setSaldos(saldosRes.data);
+        setInsumos(insumosRes.data);
+        setMovimentacoes(movRes.data);
+      } catch (error) {
+        console.error("Erro ao carregar dados da Home:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    carregarDados();
   }, []);
 
   const nomeInsumo = (id) => {
@@ -75,192 +98,198 @@ export default function Home() {
           />
           {ehGestor ? "Filiais" : "Minha Filial"}
         </h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-            gap: "16px",
-            marginBottom: "32px",
-          }}
-        >
-          {filiaisParaMostrar.map((f) => {
-            const saldosFilial = saldos.filter((s) => s.filial_id === f.id);
-            const criticos = saldosFilial.filter(
-              (s) => s.status === "critico",
-            ).length;
-            const totalInsumos = saldosFilial.length;
-            const totalEstoque = saldosFilial.reduce(
-              (acc, s) => acc + s.saldo,
-              0,
-            );
+        {loading ? (
+          <p style={{ color: 'var(--cor-texto-suave)', textAlign: 'center', padding: '32px 0' }}>
+            Carregando...
+          </p>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "16px",
+              marginBottom: "32px",
+            }}
+          >
+            {filiaisParaMostrar.map((f) => {
+              const saldosFilial = saldos.filter((s) => s.filial_id === f.id);
+              const criticos = saldosFilial.filter(
+                (s) => s.status === "critico",
+              ).length;
+              const totalInsumos = saldosFilial.length;
+              const totalEstoque = saldosFilial.reduce(
+                (acc, s) => acc + s.saldo,
+                0,
+              );
 
-            return (
-              <div
-                key={f.id}
-                onClick={() => navigate(`/dashboard?filial=${f.id}`)}
-                style={{
-                  padding: "28px 24px",
-                  background: "var(--cor-superficie)",
-                  border: "1px solid var(--cor-borda)",
-                  borderRadius: "12px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                  position: "relative",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 12px rgba(0,0,0,0.06)";
-                  e.currentTarget.style.borderColor = "var(--cor-destaque)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow =
-                    "0 1px 3px rgba(0,0,0,0.04)";
-                  e.currentTarget.style.borderColor = "var(--cor-borda)";
-                }}
-              >
+              return (
                 <div
+                  key={f.id}
+                  onClick={() => navigate(`/dashboard?filial=${f.id}`)}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "start",
+                    padding: "28px 24px",
+                    background: "var(--cor-superficie)",
+                    border: "1px solid var(--cor-borda)",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                    position: "relative",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(0,0,0,0.06)";
+                    e.currentTarget.style.borderColor = "var(--cor-destaque)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 1px 3px rgba(0,0,0,0.04)";
+                    e.currentTarget.style.borderColor = "var(--cor-borda)";
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
+                      justifyContent: "space-between",
+                      alignItems: "start",
                     }}
                   >
-                    <Building2
-                      size={18}
-                      strokeWidth={1.5}
-                      color="var(--cor-texto-titulo)"
-                    />
-                    <h3
+                    <div
                       style={{
-                        margin: 0,
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "var(--cor-texto-titulo)",
-                      }}
-                    >
-                      {f.nome}
-                    </h3>
-                  </div>
-                  {criticos > 0 && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "var(--cor-perigo)",
-                        background: "var(--cor-perigo-bg)",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        fontWeight: "500",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
-                      <AlertTriangle size={12} strokeWidth={2} />
-                      {criticos} {criticos > 1}
-                    </span>
-                  )}
-                </div>
-
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "var(--cor-texto-suave)",
-                    margin: "6px 0 14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
-                  <User size={13} strokeWidth={1.5} />
-                  {f.responsavel || "Sem responsável"}
-                </p>
-
-                <div style={{ display: "flex", gap: "24px" }}>
-                  <div>
-                    <p
-                      style={{
-                        fontSize: "10px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                        color: "var(--cor-texto-suave)",
-                        margin: 0,
                         display: "flex",
                         alignItems: "center",
-                        gap: "4px",
+                        gap: "8px",
                       }}
                     >
-                      <Package size={12} strokeWidth={1.5} />
-                      Insumos
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: "500",
-                        margin: 0,
-                        color: "var(--cor-texto-titulo)",
-                      }}
-                    >
-                      {totalInsumos}
-                    </p>
+                      <Building2
+                        size={18}
+                        strokeWidth={1.5}
+                        color="var(--cor-texto-titulo)"
+                      />
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "var(--cor-texto-titulo)",
+                        }}
+                      >
+                        {f.nome}
+                      </h3>
+                    </div>
+                    {criticos > 0 && (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "var(--cor-perigo)",
+                          background: "var(--cor-perigo-bg)",
+                          padding: "2px 8px",
+                          borderRadius: "12px",
+                          fontWeight: "500",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <AlertTriangle size={12} strokeWidth={2} />
+                        {criticos} {criticos > 1}
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <p
-                      style={{
-                        fontSize: "10px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                        color: "var(--cor-texto-suave)",
-                        margin: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
-                      <BarChart3 size={12} strokeWidth={1.5} />
-                      Estoque
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: "500",
-                        margin: 0,
-                        color: "var(--cor-texto-titulo)",
-                      }}
-                    >
-                      {totalEstoque}
-                    </p>
+
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--cor-texto-suave)",
+                      margin: "6px 0 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    <User size={13} strokeWidth={1.5} />
+                    {f.responsavel || "Sem responsável"}
+                  </p>
+
+                  <div style={{ display: "flex", gap: "24px" }}>
+                    <div>
+                      <p
+                        style={{
+                          fontSize: "10px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          color: "var(--cor-texto-suave)",
+                          margin: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <Package size={12} strokeWidth={1.5} />
+                        Insumos
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "18px",
+                          fontWeight: "500",
+                          margin: 0,
+                          color: "var(--cor-texto-titulo)",
+                        }}
+                      >
+                        {totalInsumos}
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        style={{
+                          fontSize: "10px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          color: "var(--cor-texto-suave)",
+                          margin: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <BarChart3 size={12} strokeWidth={1.5} />
+                        Estoque
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "18px",
+                          fontWeight: "500",
+                          margin: 0,
+                          color: "var(--cor-texto-titulo)",
+                        }}
+                      >
+                        {totalEstoque}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "12px",
+                      right: "16px",
+                      fontSize: "11px",
+                      color: "var(--cor-texto-suave)",
+                      opacity: 0.5,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    Ver estoque
+                    <ChevronRight size={14} strokeWidth={1.5} />
                   </div>
                 </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "12px",
-                    right: "16px",
-                    fontSize: "11px",
-                    color: "var(--cor-texto-suave)",
-                    opacity: 0.5,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
-                  Ver estoque
-                  <ChevronRight size={14} strokeWidth={1.5} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         <h3 style={{ marginBottom: "16px", color: "var(--cor-texto-titulo)" }}>
           <LayoutDashboard
@@ -323,25 +352,25 @@ export default function Home() {
             </button>
           )}
 
-            <button
-              onClick={() => navigate("/entrada")}
-              style={{
-                padding: "12px 24px",
-                background: "var(--cor-sucesso)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <ArrowUpCircle size={18} />
-              Registrar Entrada
-            </button>
+          <button
+            onClick={() => navigate("/entrada")}
+            style={{
+              padding: "12px 24px",
+              background: "var(--cor-sucesso)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "500",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <ArrowUpCircle size={18} />
+            Registrar Entrada
+          </button>
 
           <button
             onClick={() => navigate("/saida")}

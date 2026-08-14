@@ -32,6 +32,10 @@ export default function EntradaInsumos() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (mensagem) {
+      setMensagem('');
+      setEhErro(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -102,7 +106,17 @@ export default function EntradaInsumos() {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>
-              <SeletorInsumo insumos={insumos} valor={form.insumo_id} onChange={(value) => setForm({ ...form, insumo_id: value })} />
+              <SeletorInsumo
+                insumos={insumos}
+                valor={form.insumo_id}
+                onChange={(value) => {
+                  setForm({ ...form, insumo_id: value });
+                  if (mensagem) {
+                    setMensagem('');
+                    setEhErro(false);
+                  }
+                }}
+              />
             </div>
 
             {ehGestor && (
@@ -147,11 +161,12 @@ export default function EntradaInsumos() {
 
             <button
               type="submit"
+              disabled={loading}
               style={{ width: '100%', padding: '11px', background: 'var(--cor-destaque)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'background 0.2s' }}
               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--cor-destaque-hover)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'var(--cor-destaque)'}
             >
-              disabled={loading || (
+              {loading ? 'Registrando...' : (
                 <>
                   <ArrowUpCircle size={18} /> Registrar Entrada
                 </>

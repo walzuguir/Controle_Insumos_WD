@@ -37,6 +37,16 @@ export default function CadastroGestor() {
     api.get('/estoque-minimo').then((res) => setEstoquesMinimos(res.data));
   }, []);
 
+  useEffect(() => {
+    if (mensagem) {
+      const timer = setTimeout(() => {
+        setMensagem('');
+        setEhErro(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensagem]);
+
   const handleSubmitInsumo = async (e) => {
     e.preventDefault();
     try {
@@ -52,7 +62,7 @@ export default function CadastroGestor() {
       const res = await api.get('/insumos?incluir_inativos=true');
       setInsumos(res.data);
     } catch (error) {
-      setMensagem('Erro ao salvar insumo.');
+      setMensagem(error.response?.data?.error || 'Erro ao salvar insumo.');
       setEhErro(true);
     }
   };
@@ -74,7 +84,7 @@ export default function CadastroGestor() {
       const res = await api.get('/filiais?incluir_inativos=true');
       setFiliais(res.data);
     } catch (error) {
-      setMensagem('Erro ao salvar filial.');
+      setMensagem(error.response?.data?.error || 'Erro ao salvar filial.');
       setEhErro(true);
     }
   };
@@ -212,7 +222,7 @@ export default function CadastroGestor() {
               <input id="unidade" placeholder="Ex: Resma, Caixa, Litro" value={formInsumo.unidade} onChange={(e) => setFormInsumo({ ...formInsumo, unidade: e.target.value })} required style={inputStyle} />
 
               <label htmlFor="estoque_minimo" style={labelStyle}>Estoque mínimo</label>
-              <input id="estoque_minimo" placeholder="Ex: 10" type="number" value={formInsumo.estoque_minimo} onChange={(e) => setFormInsumo({ ...formInsumo, estoque_minimo: e.target.value })} required style={inputStyle} />
+              <input id="estoque_minimo" placeholder="Ex: 10" type="number" min="0" value={formInsumo.estoque_minimo} onChange={(e) => setFormInsumo({ ...formInsumo, estoque_minimo: e.target.value })} required style={inputStyle} />
 
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button type="submit" style={btnPrimario}>

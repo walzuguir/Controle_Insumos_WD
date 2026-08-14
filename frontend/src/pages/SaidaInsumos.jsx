@@ -38,8 +38,20 @@ export default function SaidaInsumos() {
     return null;
   }, [form.insumo_id, form.filial_origem, saldos, ehGestor, usuario?.filial_id]);
 
+  const saldoInsuficiente = saldoDisponivel !== null && form.quantidade && parseFloat(form.quantidade) > saldoDisponivel;
+
+  const mensagemExibida = saldoInsuficiente
+    ? `Saldo insuficiente. Disponível: ${saldoDisponivel} unidades.`
+    : mensagem;
+
+  const ehErroExibido = saldoInsuficiente ? true : ehErro;
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (mensagem) {
+      setMensagem('');
+      setEhErro(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -151,7 +163,17 @@ export default function SaidaInsumos() {
 
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="insumo_id" style={labelStyle}>Insumo</label>
-              <SeletorInsumo insumos={insumos} valor={form.insumo_id} onChange={(value) => setForm({ ...form, insumo_id: value })} />
+              <SeletorInsumo
+                insumos={insumos}
+                valor={form.insumo_id}
+                onChange={(value) => {
+                  setForm({ ...form, insumo_id: value });
+                  if (mensagem) {
+                    setMensagem('');
+                    setEhErro(false);
+                  }
+                }}
+              />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
@@ -197,9 +219,9 @@ export default function SaidaInsumos() {
               />
             </div>
 
-            {mensagem && (
-              <p style={{ color: ehErro ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
-                {mensagem}
+            {mensagemExibida && (
+              <p style={{ color: ehErroExibido ? 'var(--cor-perigo)' : 'var(--cor-sucesso)', fontSize: '14px', marginBottom: '16px' }}>
+                {mensagemExibida}
               </p>
             )}
 

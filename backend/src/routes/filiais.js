@@ -9,7 +9,7 @@ const CACHE_TTL_FILIAIS = 60000;
 router.get('/', async (req, res) => {
   try {
     const incluirInativos = req.query.incluir_inativos === 'true';
-    
+
     if (!incluirInativos && cacheFiliais && cacheFiliaisTimestamp && (Date.now() - cacheFiliaisTimestamp < CACHE_TTL_FILIAIS)) {
       return res.json(cacheFiliais);
     }
@@ -59,6 +59,21 @@ router.post('/', async (req, res) => {
     }
 
     const sheets = await getSheets();
+
+    const existentesRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Filiais!A:E',
+    });
+    const linhas = (existentesRes.data.values || []).slice(1);
+    const nomeNormalizado = nome.trim().toLowerCase();
+    const jaExiste = linhas.some(row =>
+      row[1] && row[1].trim().toLowerCase() === nomeNormalizado && row[4] !== 'inativo'
+    );
+
+    if (jaExiste) {
+      return res.status(409).json({ error: `Já existe uma filial ativa chamada "${nome}"` });
+    }
+
     const id = await getNextId('Filiais');
     const agora = new Date().toISOString();
 
@@ -95,6 +110,20 @@ router.put('/:id', async (req, res) => {
     }
 
     const sheets = await getSheets();
+
+    const existentesRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Filiais!A:E',
+    });
+    const linhas = (existentesRes.data.values || []).slice(1);
+    const nomeNormalizado = nome.trim().toLowerCase();
+    const jaExiste = linhas.some(row =>
+      row[1] && row[1].trim().toLowerCase() === nomeNormalizado && row[4] !== 'inativo'
+    );
+
+    if (jaExiste) {
+      return res.status(409).json({ error: `Já existe uma filial ativa chamada "${nome}"` });
+    }
 
     const atual = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,

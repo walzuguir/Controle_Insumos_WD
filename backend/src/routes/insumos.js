@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   try {
 
     const incluirInativos = req.query.incluir_inativos === 'true';
-    
+
     if (!incluirInativos && cacheInsumos && cacheInsumosTimestamp && (Date.now() - cacheInsumosTimestamp < CACHE_TTL_INSUMOS)) {
       return res.json(cacheInsumos);
     }
@@ -59,7 +59,27 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Campos obrigatórios: nome, unidade, estoque_minimo' });
     }
 
+    const minimo = Number(estoque_minimo);
+    if (!Number.isFinite(minimo) || minimo < 0) {
+      return res.status(400).json({ error: 'Estoque mínimo deve ser um número maior ou igual a zero' });
+    }
+
     const sheets = await getSheets();
+
+    const existentesRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Insumos!A:E',
+    });
+    const linhas = (existentesRes.data.values || []).slice(1);
+    const nomeNormalizado = nome.trim().toLowerCase();
+    const jaExiste = linhas.some(row =>
+      row[1] && row[1].trim().toLowerCase() === nomeNormalizado && row[4] !== 'inativo'
+    );
+
+    if (jaExiste) {
+      return res.status(409).json({ error: `Já existe um insumo ativo chamado "${nome}"` });
+    }
+
     const id = await getNextId('Insumos');
     const agora = new Date().toISOString();
 
@@ -90,12 +110,31 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Campos obrigatórios: nome, unidade, estoque_minimo' });
     }
 
+    const minimo = Number(estoque_minimo);
+    if (!Number.isFinite(minimo) || minimo < 0) {
+      return res.status(400).json({ error: 'Estoque mínimo deve ser um número maior ou igual a zero' });
+    }
+
     const linha = await findRowById('Insumos', id);
     if (linha === -1) {
       return res.status(404).json({ error: 'Insumo não encontrado' });
     }
 
     const sheets = await getSheets();
+
+    const existentesRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Insumos!A:E',
+    });
+    const linhas = (existentesRes.data.values || []).slice(1);
+    const nomeNormalizado = nome.trim().toLowerCase();
+    const jaExiste = linhas.some(row =>
+      row[0] !== id && row[1] && row[1].trim().toLowerCase() === nomeNormalizado && row[4] !== 'inativo'
+    );
+
+    if (jaExiste) {
+      return res.status(409).json({ error: `Já existe um insumo ativo chamado "${nome}"` });
+    }
 
     const atual = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,

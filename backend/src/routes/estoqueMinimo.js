@@ -53,8 +53,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Campos obrigatórios: filial_id, insumo_id, estoque_minimo' });
     }
 
+    const minimo = Number(estoque_minimo);
+    if (!Number.isFinite(minimo) || minimo < 0) {
+      return res.status(400).json({ error: 'Estoque mínimo deve ser um número maior ou igual a zero' });
+    }
+
     const sheets = await getSheets();
-    
+
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: 'EstoqueMinimo!A:F',
@@ -84,12 +89,12 @@ router.post('/', async (req, res) => {
           values: [[estoque_minimo, existingRow[4] || agora, agora]],
         },
       });
-      
+
       invalidarCache();
 
       cacheEstoqueMinimo = null;
       cacheEstoqueMinimoTimestamp = null;
-      return res.json({ 
+      return res.json({
         message: 'Estoque mínimo atualizado com sucesso!',
         atualizado: true
       });
@@ -103,14 +108,14 @@ router.post('/', async (req, res) => {
           values: [[id, filial_id, insumo_id, estoque_minimo, agora, agora]],
         },
       });
-      
+
       invalidarCache();
-      
+
       cacheEstoqueMinimo = null;
       cacheEstoqueMinimoTimestamp = null;
-      return res.status(201).json({ 
-        message: 'Estoque mínimo cadastrado com sucesso!', 
-        id 
+      return res.status(201).json({
+        message: 'Estoque mínimo cadastrado com sucesso!',
+        id
       });
     }
   } catch (error) {
