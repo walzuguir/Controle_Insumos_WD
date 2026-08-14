@@ -1,16 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
+import { useInsumos } from '../hooks/useInsumos';
+import { useFiliais } from '../hooks/useFiliais';
 import api from "../services/api";
 import Header from "../components/Header";
-import { Bar } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+);
+
 import {
   Package,
   ArrowRightLeft,
@@ -26,20 +42,11 @@ import ComparativoMensal from '../components/ComparativoMensal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-);
-
 export default function Relatorio() {
+  const { insumos } = useInsumos();
+  const { filiais } = useFiliais();
   const [movimentacoes, setMovimentacoes] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
-  const [insumos, setInsumos] = useState([]);
-  const [filiais, setFiliais] = useState([]);
   const [aba, setAba] = useState('movimentacoes');
   const [filtros, setFiltros] = useState({
     filial: "",
@@ -58,6 +65,11 @@ export default function Relatorio() {
   const [loadingComparativo, setLoadingComparativo] = useState(false);
   const [mesComparativo, setMesComparativo] = useState(new Date().getMonth() + 1);
   const [anoComparativo, setAnoComparativo] = useState(new Date().getFullYear());
+  const [mesReferencia, setMesReferencia] = useState(null);
+  const [anoReferencia, setAnoReferencia] = useState(null);
+  const [movimentacoesReferencia, setMovimentacoesReferencia] = useState([]);
+  const [loadingReferencia, setLoadingReferencia] = useState(false);
+  const [cacheMovimentacoesMes, setCacheMovimentacoesMes] = useState({});
 
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const ehGestor = usuario?.filial_id === "gestor";
@@ -108,53 +120,9 @@ export default function Relatorio() {
   }, [filtros, ehGestor, usuario?.filial_id, calcularResumo]);
 
   useEffect(() => {
-    if (aba !== 'comparativo') return;
-
-    let cancelled = false;
-
-    const fetchComparativo = async () => {
-      setLoadingComparativo(true);
-      try {
-        const dataInicio = new Date(anoComparativo, mesComparativo - 1, 1);
-        const dataFim = new Date(anoComparativo, mesComparativo, 0);
-
-        const params = new URLSearchParams();
-        params.append('data_inicio', dataInicio.toISOString().split('T')[0]);
-        params.append('data_fim', dataFim.toISOString().split('T')[0]);
-
-        const res = await api.get(`/movimentacoes?${params.toString()}`);
-
-        if (!cancelled) {
-          setMovimentacoesComparativo(res.data);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Erro ao buscar movimentações do mês:', error);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingComparativo(false);
-        }
-      }
-    };
-
-    fetchComparativo();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [aba, mesComparativo, anoComparativo]);
-
-  useEffect(() => {
     const carregarDadosIniciais = async () => {
       try {
-        const [insumosRes, filiaisRes, usuariosRes] = await Promise.all([
-          api.get("/insumos"),
-          api.get("/filiais"),
-          api.get("/auth/usuarios"),
-        ]);
-        setInsumos(insumosRes.data);
-        setFiliais(filiaisRes.data);
+        const usuariosRes = await api.get("/auth/usuarios");
         setUsuarios(usuariosRes.data);
         await buscar();
       } catch (error) {
@@ -204,6 +172,49 @@ export default function Relatorio() {
       }],
     };
   };
+
+
+  const buscarMovimentacoesDoMes = useCallback(async (mes, ano) => {
+    const dataInicio = new Date(ano, mes - 1, 1);
+    const dataFim = new Date(ano, mes, 0);
+    const params = new URLSearchParams();
+    params.append('data_inicio', dataInicio.toISOString().split('T')[0]);
+    params.append('data_fim', dataFim.toISOString().split('T')[0]);
+    const res = await api.get(`/movimentacoes?${params.toString()}`);
+    return res.data;
+  }, []);
+
+  const obterMovimentacoesComCache = useCallback(async (mes, ano) => {
+    const chave = `${ano}-${mes}`;
+    if (cacheMovimentacoesMes[chave]) {
+      return cacheMovimentacoesMes[chave];
+    }
+    const dados = await buscarMovimentacoesDoMes(mes, ano);
+    setCacheMovimentacoesMes(prev => ({ ...prev, [chave]: dados }));
+    return dados;
+  }, [cacheMovimentacoesMes, buscarMovimentacoesDoMes]);
+
+  useEffect(() => {
+    if (aba !== 'comparativo') return;
+    let cancelled = false;
+    setLoadingComparativo(true);
+    obterMovimentacoesComCache(mesComparativo, anoComparativo)
+      .then(dados => { if (!cancelled) setMovimentacoesComparativo(dados); })
+      .catch(err => console.error('Erro ao buscar mês atual:', err))
+      .finally(() => { if (!cancelled) setLoadingComparativo(false); });
+    return () => { cancelled = true; };
+  }, [aba, mesComparativo, anoComparativo, obterMovimentacoesComCache]);
+
+  useEffect(() => {
+    if (aba !== 'comparativo' || !mesReferencia || !anoReferencia) return;
+    let cancelled = false;
+    setLoadingReferencia(true);
+    obterMovimentacoesComCache(mesReferencia, anoReferencia)
+      .then(dados => { if (!cancelled) setMovimentacoesReferencia(dados); })
+      .catch(err => console.error('Erro ao buscar mês de referência:', err))
+      .finally(() => { if (!cancelled) setLoadingReferencia(false); });
+    return () => { cancelled = true; };
+  }, [aba, mesReferencia, anoReferencia, obterMovimentacoesComCache]);
 
   const exportarCSV = () => {
     const headers = [
@@ -509,6 +520,7 @@ export default function Relatorio() {
         {aba === 'comparativo' && (
           <ComparativoMensal
             movimentacoes={movimentacoesComparativo}
+            movimentacoesReferencia={movimentacoesReferencia}
             insumos={insumos}
             filiais={filiais}
             usuarios={usuarios}
@@ -517,7 +529,12 @@ export default function Relatorio() {
             ano={anoComparativo}
             setMes={setMesComparativo}
             setAno={setAnoComparativo}
+            mesReferencia={mesReferencia}
+            anoReferencia={anoReferencia}
+            setMesReferencia={setMesReferencia}
+            setAnoReferencia={setAnoReferencia}
             loading={loadingComparativo}
+            loadingReferencia={loadingReferencia}
           />
         )}
       </div>

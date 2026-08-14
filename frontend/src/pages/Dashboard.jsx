@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { useSaldos } from '../hooks/useSaldos';
+import { useFiliais } from '../hooks/useFiliais';
+import { useInsumos } from '../hooks/useInsumos';
 import Header from '../components/Header';
 import {
   LayoutDashboard,
@@ -15,12 +17,13 @@ import SeletorInsumo from '../components/SeletorInsumo';
 
 
 export default function Dashboard() {
-  const [saldos, setSaldos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filiais, setFiliais] = useState([]);
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { saldos, loading: loadingSaldos } = useSaldos();
+  const { filiais, loading: loadingFiliais } = useFiliais();
+  const { insumos, loading: loadingInsumos } = useInsumos();
+  const loading = loadingSaldos || loadingFiliais || loadingInsumos;
 
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const ehGestor = usuario?.filial_id === 'gestor';
@@ -33,24 +36,8 @@ export default function Dashboard() {
     return daURL || ''; // ← sem fallback, vazio = "Todas"
   }, [location.search]);
 
-  const [insumos, setInsumos] = useState([]);
   const [insumoSelecionado, setInsumoSelecionado] = useState('');
 
-  // 🔧 CARREGAR DADOS
-  useEffect(() => {
-    api.get('/saldos').then(res => {
-      let dados = res.data;
-      if (!ehGestor) {
-        dados = dados.filter(s => s.filial_id === filialDoUsuario);
-      }
-      setSaldos(dados);
-      api.get('/filiais').then(res => setFiliais(res.data));
-      api.get('/insumos').then(res => setInsumos(res.data));
-      setLoading(false);
-    });
-  }, []);
-
-  // 🔧 FUNÇÃO PARA MUDAR FILIAL
   const mudarFilial = (novaFilial) => {
     const url = novaFilial ? `/dashboard?filial=${novaFilial}` : '/dashboard';
     navigate(url);

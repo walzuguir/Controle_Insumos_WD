@@ -1,11 +1,15 @@
-import { useState, useEffect, useMemo } from 'react'; import api from '../services/api';
+import { useState, useMemo } from 'react'; import api from '../services/api';
+import { useInsumos } from '../hooks/useInsumos';
+import { useFiliais } from '../hooks/useFiliais';
+import { useSaldos } from '../hooks/useSaldos';
 import Header from '../components/Header';
 import { ArrowDownCircle, AlertTriangle } from 'lucide-react';
 import SeletorInsumo from '../components/SeletorInsumo';
 
 export default function SaidaInsumos() {
-  const [insumos, setInsumos] = useState([]);
-  const [filiais, setFiliais] = useState([]);
+  const { insumos } = useInsumos();
+  const { filiais } = useFiliais();
+  const { saldos, setSaldos } = useSaldos();
   const [form, setForm] = useState({
     tipo: 'saida',
     insumo_id: '',
@@ -16,16 +20,10 @@ export default function SaidaInsumos() {
   const [mensagem, setMensagem] = useState('');
   const [ehErro, setEhErro] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [saldos, setSaldos] = useState([]);
 
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const ehGestor = usuario?.filial_id === 'gestor';
 
-  useEffect(() => {
-    api.get('/insumos').then((res) => setInsumos(res.data));
-    api.get('/filiais').then((res) => setFiliais(res.data));
-    api.get('/saldos').then((res) => setSaldos(res.data));
-  }, []);
 
   const saldoDisponivel = useMemo(() => {
     if (form.insumo_id && (ehGestor ? form.filial_origem : usuario?.filial_id)) {

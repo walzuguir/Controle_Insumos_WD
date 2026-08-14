@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import SeletorInsumo from './SeletorInsumo';
 import { classificarMovimento } from '../utils/classificarMovimento';
 import {
@@ -14,6 +14,7 @@ import {
 
 export default function ComparativoMensal({
     movimentacoes,
+    movimentacoesReferencia,
     insumos,
     filiais,
     usuarios,
@@ -22,7 +23,12 @@ export default function ComparativoMensal({
     ano,
     setMes,
     setAno,
+    mesReferencia,
+    anoReferencia,
+    setMesReferencia,
+    setAnoReferencia,
     loading,
+    loadingReferencia,
 }) {
 
     const [categoria, setCategoria] = useState('');
@@ -115,6 +121,41 @@ export default function ComparativoMensal({
             .sort((a, b) => a.dia - b.dia);
     }, [movimentacoesFiltradas]);
 
+    const diasNoMesReferencia = mesReferencia ? new Date(anoReferencia, mesReferencia, 0).getDate() : 0;
+
+    const movimentacoesReferenciaFiltradas = useMemo(() => {
+        if (!mesReferencia) return [];
+        return movimentacoesReferencia.filter((m) => {
+            const data = new Date(m.data);
+            if (data.getFullYear() !== anoReferencia || data.getMonth() + 1 !== mesReferencia) return false;
+            if (categoria && classificarMovimento(m) !== categoria) return false;
+            if (insumoId && m.insumo_id !== insumoId) return false;
+            if (filialId && m.filial_origem !== filialId && m.filial_destino !== filialId) return false;
+            if (responsavelId && m.responsavel_id !== responsavelId) return false;
+            return true;
+        });
+    }, [movimentacoesReferencia, mesReferencia, anoReferencia, categoria, insumoId, filialId, responsavelId]);
+
+    const dadosPorDiaReferencia = useMemo(() => {
+        if (!mesReferencia) return [];
+        const totais = Array(diasNoMesReferencia).fill(0);
+        movimentacoesReferenciaFiltradas.forEach((m) => {
+            const dia = new Date(m.data).getDate();
+            totais[dia - 1] += parseFloat(m.quantidade || 0);
+        });
+        return totais;
+    }, [movimentacoesReferenciaFiltradas, diasNoMesReferencia]);
+
+    const diasEixoX = Math.max(diasNoMes, diasNoMesReferencia || 0);
+
+    const dadosPorDiaAlinhado = Array.from({ length: diasEixoX }, (_, i) =>
+        i < dadosPorDia.length ? dadosPorDia[i] : null
+    );
+
+    const dadosPorDiaReferenciaAlinhado = Array.from({ length: diasEixoX }, (_, i) =>
+        i < dadosPorDiaReferencia.length ? dadosPorDiaReferencia[i] : null
+    );
+
     const exportarCSVComparativo = () => {
         const headers = ['Dia', 'Quantidade', 'Insumos (top 5)'];
         const linhas = diasDoMesComDados.map((d) => [
@@ -169,6 +210,29 @@ export default function ComparativoMensal({
                 borderColor: corAtual.border,
                 borderWidth: 1,
                 borderRadius: 3,
+            },
+        ],
+    };
+
+    const dadosGraficoComparacao = {
+        labels: Array.from({ length: diasEixoX }, (_, i) => String(i + 1)),
+        datasets: [
+            {
+                label: `${nomesMeses[mes - 1]} ${ano}`,
+                data: dadosPorDiaAlinhado,
+                borderColor: 'rgba(59, 130, 246, 1)',
+                backgroundColor: 'rgba(247, 246, 246, 0.1)',
+                tension: 0.3,
+                spanGaps: false,
+            },
+            {
+                label: `${nomesMeses[mesReferencia - 1]} ${anoReferencia}`,
+                data: dadosPorDiaReferenciaAlinhado,
+                borderColor: 'rgba(245, 158, 11, 1)',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.3,
+                spanGaps: false,
+                borderDash: [6, 4],
             },
         ],
     };
@@ -235,6 +299,34 @@ export default function ComparativoMensal({
                     ))}
                 </select>
 
+                <select
+                    value={mesReferencia ? `${anoReferencia}-${mesReferencia}` : ''}
+                    onChange={(e) => {
+                        if (!e.target.value) {
+                            setMesReferencia(null);
+                            setAnoReferencia(null);
+                            return;
+                        }
+                        const [anoRef, mesRef] = e.target.value.split('-').map(Number);
+                        setMesReferencia(mesRef);
+                        setAnoReferencia(anoRef);
+                    }}
+                    style={filterStyle}
+                >
+                    <option value="">Sem comparação</option>
+                    {Array.from({ length: 12 }, (_, i) => {
+                        const dataRef = new Date();
+                        dataRef.setMonth(dataRef.getMonth() - i - 1); // começa no mês passado
+                        const anoOpcao = dataRef.getFullYear();
+                        const mesOpcao = dataRef.getMonth() + 1;
+                        return (
+                            <option key={`${anoOpcao}-${mesOpcao}`} value={`${anoOpcao}-${mesOpcao}`}>
+                                Comparar com {nomesMeses[mesOpcao - 1]} {anoOpcao}
+                            </option>
+                        );
+                    })}
+                </select>
+
                 <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={{ ...filterStyle, minWidth: isMobile ? '100%' : 'auto', flex: isMobile ? '1 1 100%' : '0 1 auto' }}>
                     <option value="">Todas as movimentações</option>
                     <option value="consumo">Apenas Consumo</option>
@@ -297,7 +389,9 @@ export default function ComparativoMensal({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <h3 style={{ color: 'var(--cor-texto-titulo)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                         <CalendarDays size={18} strokeWidth={1.5} color="var(--cor-texto-titulo)" />
-                        {nomesMeses[mes - 1]} de {ano}
+                        {mesReferencia
+                            ? `Comparação: ${nomesMeses[mes - 1]} ${ano} vs ${nomesMeses[mesReferencia - 1]} ${anoReferencia}`
+                            : `${nomesMeses[mes - 1]} de ${ano}`}
                     </h3>
                     <span style={{
                         background: 'var(--cor-superficie-2)',
@@ -327,35 +421,58 @@ export default function ComparativoMensal({
                     </div>
                 ) : (
                     <div style={{ height: isMobile ? '260px' : '320px' }}>
-                        <Bar
-                            ref={chartRef}
-                            data={dadosGrafico}
-                            onClick={handleChartClick}
-                            options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: { display: false },
-                                    tooltip: {
-                                        callbacks: {
-                                            title: (items) => {
-                                                const dia = items[0].label;
-                                                return `${dia} de ${nomesMeses[mes - 1]} de ${ano}`;
-                                            },
-                                            label: (context) => {
-                                                const valor = context.parsed.y;
-                                                const total = dadosPorDia.reduce((a, b) => a + b, 0);
-                                                return `${valor} unidades (${total > 0 ? Math.round((valor / total) * 100) : 0}%)`;
+                        {mesReferencia ? (
+                            <Line
+                                data={dadosGraficoComparacao}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: true, position: 'top', labels: { color: 'var(--cor-texto)' } },
+                                        tooltip: {
+                                            callbacks: {
+                                                title: (items) => `Dia ${items[0].label}`,
+                                                label: (context) => `${context.dataset.label}: ${context.parsed.y ?? 'sem dados'} unidades`,
                                             },
                                         },
                                     },
-                                },
-                                scales: {
-                                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                                    x: { grid: { display: false } },
-                                },
-                            }}
-                        />
+                                    scales: {
+                                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                                        x: { grid: { display: false } },
+                                    },
+                                }}
+                            />
+                        ) : (
+                            <Bar
+                                ref={chartRef}
+                                data={dadosGrafico}
+                                onClick={handleChartClick}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: {
+                                            callbacks: {
+                                                title: (items) => {
+                                                    const dia = items[0].label;
+                                                    return `${dia} de ${nomesMeses[mes - 1]} de ${ano}`;
+                                                },
+                                                label: (context) => {
+                                                    const valor = context.parsed.y;
+                                                    const total = dadosPorDia.reduce((a, b) => a + b, 0);
+                                                    return `${valor} unidades (${total > 0 ? Math.round((valor / total) * 100) : 0}%)`;
+                                                },
+                                            },
+                                        },
+                                    },
+                                    scales: {
+                                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                                        x: { grid: { display: false } },
+                                    },
+                                }}
+                            />
+                        )}
                     </div>
                 )}
                 {diasSelecionados.length > 0 && (
